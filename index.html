@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16150f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CD-Katalog">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<title>CD-Katalog</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #cfcabf;
+    --window: #f4f2ec;
+    --panel: #ffffff;
+    --ink: #16150f;
+    --ink-muted: #55524a;
+    --line: #16150f;
+    --line-soft: #a39d8d;
+    --accent: #1c3fb7;
+    --accent-ink: #ffffff;
+    --warn: #a3341f;
+    --hairline: #d8d3c4;
+    --shadow: rgba(22,21,15,0.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #05170c; --window: #08170d; --panel: #0b1f11;
+      --ink: #cdf5d8; --ink-muted: #6fae83; --line: #4bdc7e;
+      --accent: #4bdc7e; --accent-ink: #05170c; --warn: #ff8a70;
+      --line-soft: #1f5432; --hairline: #163b23; --shadow: rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #05170c; --window: #08170d; --panel: #0b1f11;
+    --ink: #cdf5d8; --ink-muted: #6fae83; --line: #4bdc7e;
+    --accent: #4bdc7e; --accent-ink: #05170c; --warn: #ff8a70;
+    --line-soft: #1f5432; --hairline: #163b23; --shadow: rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; padding-block: 14px; }
+  .pixel { font-family: "Silkscreen", "IBM Plex Mono", monospace; letter-spacing: 0.02em; }
+  button, input, select, textarea { font-family: inherit; }
+
+  .win { max-width: 560px; margin: 0 auto 24px auto; padding: 0 14px; }
+  .titlebar {
+    border: 2px solid var(--line); border-bottom: none; background: var(--panel);
+    padding: 7px 10px; display: flex; align-items: center; gap: 10px;
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  }
+  .titlebar .box { width: 11px; height: 11px; border: 1.5px solid var(--line); flex: 0 0 auto; }
+  .titlebar .stripes { flex: 1; height: 11px; background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 3px); opacity: 0.55; }
+  .titlebar h1 { font-size: 13px; margin: 0; padding: 0 8px; background: var(--panel); white-space: nowrap; }
+
+  .menubar {
+    border: 2px solid var(--line); border-top: none; border-bottom: none;
+    background: var(--panel); display: flex; overflow-x: auto; scrollbar-width: none;
+    position: sticky; top: calc(env(safe-area-inset-top, 0px) + 27px); z-index: 29;
+  }
+  .menubar::-webkit-scrollbar { display: none; }
+  .menuitem {
+    flex: 0 0 auto; font-family: "Silkscreen", monospace; font-size: 10.5px;
+    padding: 8px 11px; border-right: 1px solid var(--hairline); color: var(--ink); white-space: nowrap;
+  }
+  .menuitem:active { background: var(--accent); color: var(--accent-ink); }
+
+  .toolbar { border: 2px solid var(--line); border-top: none; background: var(--window); padding: 10px 10px 8px 10px; }
+  .searchrow { display: flex; gap: 8px; }
+  #q { flex: 1; font-size: 15px; padding: 9px 14px; border: 2px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); outline: none; }
+  #q::placeholder { color: var(--ink-muted); }
+  #q:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+  #clear { display: none; font-size: 13px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 8px 12px; }
+
+  .chiprow { display: flex; gap: 6px; overflow-x: auto; padding: 9px 0 2px 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .chiprow::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; font-size: 11.5px; padding: 5px 10px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); white-space: nowrap; }
+  .chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  select#genre { font-size: 11.5px; padding: 5px 8px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); max-width: 42vw; }
+
+  .stats { font-size: 11px; color: var(--ink-muted); padding-top: 8px; border-top: 1px solid var(--hairline); margin-top: 9px; }
+
+  main { border: 2px solid var(--line); border-top: none; background: var(--window); padding: 4px 10px 16px 10px; }
+
+  .sectionhead { font-family: "Silkscreen", monospace; font-size: 12px; margin: 16px 0 6px 0; padding-bottom: 4px; border-bottom: 2px solid var(--line); }
+  .sectionhead .n { color: var(--ink-muted); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+  .grouphead { font-family: "Silkscreen", monospace; font-size: 11px; color: var(--panel); background: var(--line); padding: 3px 7px; margin: 10px 0 6px 0; display: inline-block; }
+
+  .card { background: var(--panel); border: 1px solid var(--hairline); border-left: 3px solid var(--line-soft); padding: 10px 11px; margin-bottom: 7px; }
+  .card.isfav { border-left-color: var(--accent); }
+  .card.flash { animation: flashcard 1.6s ease; }
+  @keyframes flashcard { 0%,100% { box-shadow: none; } 25%,75% { box-shadow: 0 0 0 2px var(--accent); } }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .cdicon { flex: 0 0 auto; margin-top: 2px; }
+  .artist { font-weight: 600; font-size: 14px; line-height: 1.25; }
+  .title { font-size: 12.5px; color: var(--ink-muted); margin-top: 1px; }
+  .meta { font-size: 10.5px; color: var(--ink-muted); margin-top: 4px; }
+  .row2 { display: flex; gap: 9px; align-items: flex-start; }
+  .row2 .info { flex: 1; min-width: 0; }
+  .pos { font-family: "Silkscreen", monospace; font-size: 9.5px; color: var(--ink); background: var(--panel); border: 1.5px solid var(--line); padding: 3px 6px; white-space: nowrap; flex: 0 0 auto; text-align: center; line-height: 1.5; }
+
+  .stars { margin-top: 5px; display: flex; gap: 2px; }
+  .stars span { font-size: 15px; color: var(--line-soft); line-height: 1; }
+  .stars span.on { color: var(--accent); }
+  .stars.readonly { pointer-events: none; }
+  .stars.picker span { font-size: 30px; cursor: pointer; padding: 4px; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .badge { font-size: 10px; border: 1px solid var(--hairline); background: var(--window); padding: 2px 6px; color: var(--ink-muted); }
+  .badge.loan { color: var(--warn); border-color: var(--warn); }
+
+  .hit { margin-top: 7px; background: var(--window); border: 1px solid var(--hairline); padding: 6px 8px; font-size: 12.5px; }
+  .hit b { color: var(--ink); }
+  .hit mark { background: var(--accent); color: var(--accent-ink); padding: 0 2px; }
+  .hit .cdlabel { color: var(--ink-muted); font-size: 10px; }
+
+  .tracklist { display: none; margin-top: 8px; border-top: 1px dashed var(--hairline); padding-top: 7px; }
+  .tracklist.open { display: block; }
+  .disc { margin-bottom: 6px; }
+  .disc h4 { font-size: 10px; color: var(--ink-muted); margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .disc ol { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.55; }
+  .disc mark { background: var(--accent); color: var(--accent-ink); padding: 0 2px; }
+
+  .toggle { margin-top: 7px; font-size: 11px; color: var(--accent); display: inline-block; cursor: pointer; }
+  .empty { text-align: center; color: var(--ink-muted); padding: 34px 20px; font-size: 13px; }
+
+  .cardactions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; border-top: 1px solid var(--hairline); padding-top: 7px; }
+  .mini { font-family: "Silkscreen", monospace; font-size: 9.5px; padding: 5px 8px; border: 1.5px solid var(--line-soft); background: var(--window); color: var(--ink); }
+  .mini:active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .mini.danger { color: var(--warn); border-color: var(--warn); }
+
+  .azbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 9px 0 2px 0; border-top: 1px solid var(--hairline); margin-top: 9px; }
+  .az { font-family: "Silkscreen", monospace; font-size: 10px; color: var(--ink-muted); background: var(--panel); border: 1.5px solid var(--line-soft); padding: 3px 6px; min-width: 18px; text-align: center; }
+  .az.mixjump { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+
+  /* --- modal --- */
+  .backdrop { display: none; position: fixed; inset: 0; background: rgba(10,10,10,0.5); z-index: 50; padding: 22px 16px; overflow-y: auto; }
+  .backdrop.open { display: block; }
+  .dialog { max-width: 460px; margin: 20px auto; background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
+  .dialog .dtitle { font-family: "Silkscreen", monospace; font-size: 12px; padding: 8px 10px; border-bottom: 2px solid var(--line); background: var(--window); display: flex; justify-content: space-between; }
+  .dialog .dtitle .xbtn { cursor: pointer; border: 1px solid var(--line); width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; }
+  .dialog .dbody { padding: 12px 14px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: var(--ink-muted); margin-bottom: 3px; }
+  .field input[type=text], .field input[type=number], .field input[type=date], .field textarea, .field select {
+    width: 100%; font-size: 14px; padding: 7px 9px; border: 2px solid var(--line); background: var(--window); color: var(--ink);
+  }
+  .field textarea { min-height: 64px; resize: vertical; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .checkrow { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-bottom: 10px; }
+  .checkrow input { width: 16px; height: 16px; }
+  .cdblocks { display: flex; flex-direction: column; gap: 8px; }
+  .dactions { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 14px 14px 14px; flex-wrap: wrap; }
+  .dbtn { font-family: "Silkscreen", monospace; font-size: 11px; padding: 8px 14px; border: 2px solid var(--line); background: var(--window); color: var(--ink); }
+  .dbtn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .dbtn.danger { background: var(--warn); color: #fff; border-color: var(--warn); }
+  .dbtn:active { filter: brightness(0.92); }
+  .formmsg { font-size: 11.5px; padding: 0 14px 8px 14px; color: var(--ink-muted); }
+  .formmsg.err { color: var(--warn); }
+
+  .statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-bottom: 12px; }
+  .statgrid .stitem { border: 1px solid var(--hairline); padding: 7px 8px; }
+  .statgrid .snum { font-family: "Silkscreen", monospace; font-size: 15px; }
+  .statgrid .slabel { font-size: 10px; color: var(--ink-muted); }
+  .barline { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 3px; }
+  .barline .blabel { width: 52px; flex: 0 0 auto; color: var(--ink-muted); }
+  .barline .bbar { color: var(--accent); font-family: "Silkscreen", monospace; letter-spacing: -1px; white-space: nowrap; overflow: hidden; }
+  .barline .bnum { color: var(--ink-muted); }
+
+  .wl-item { border: 1px solid var(--hairline); padding: 8px 9px; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .wl-item .wname { font-weight: 600; font-size: 13px; }
+  .wl-item .wtitle { font-size: 12px; color: var(--ink-muted); }
+  .wl-item .wnote { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .wl-actions { display: flex; flex-direction: column; gap: 4px; }
+
+  .sticker-wrap { border: 2px solid var(--line); padding: 10px 12px; }
+  .sticker-wrap .shead { display: flex; justify-content: space-between; border-bottom: 2px solid var(--line); padding-bottom: 6px; margin-bottom: 6px; }
+  .sticker-wrap .sartist { font-weight: 700; font-size: 15px; }
+  .sticker-wrap .stitle { font-size: 12px; color: var(--ink-muted); font-style: italic; }
+  .sticker-wrap .smeta { font-size: 10px; color: var(--ink-muted); text-align: right; }
+  .sticker-wrap .stracks { columns: 2; column-gap: 12px; font-size: 11.5px; line-height: 1.5; }
+  .sticker-wrap .sdisc { break-inside: avoid; margin-bottom: 8px; }
+  .sticker-wrap .sdisc h5 { font-size: 9.5px; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 3px 0; }
+  #toastEl { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px); font-size: 11px; padding: 10px 16px; background: var(--ink); color: var(--panel); border: 2px solid var(--line); z-index: 90; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; max-width: 88%; text-align: center; }
+  #toastEl.show { opacity: 1; transform: translate(-50%, 0); }
+  #toastEl.err { background: var(--warn); }
+  .sticker-hint { font-size: 10.5px; color: var(--ink-muted); margin-top: 8px; line-height: 1.5; }
+  @media print {
+    body * { visibility: hidden; }
+    .sticker-wrap, .sticker-wrap * { visibility: visible; }
+    .sticker-wrap { position: fixed; top: 0; left: 0; width: 100%; padding: 10mm; border: none; }
+    .sticker-hint, .backdrop .dtitle, .backdrop .dactions { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+
+<div class="win">
+  <div class="titlebar">
+    <div class="box"></div>
+    <div class="stripes"></div>
+    <h1 class="pixel">CD-Katalog</h1>
+    <div class="stripes"></div>
+    <div class="box"></div>
+  </div>
+  <div class="menubar">
+    <div class="menuitem" id="m_add">+ NEU</div>
+    <div class="menuitem" id="m_random">⚄ ZUFALL</div>
+    <div class="menuitem" id="m_stats">▤ STATS</div>
+    <div class="menuitem" id="m_wishlist">♢ WUNSCH</div>
+    <div class="menuitem" id="m_export">⇩ EXPORT</div>
+  </div>
+  <div class="toolbar">
+    <div class="searchrow">
+      <input id="q" type="search" placeholder="Song, Interpret, Album, Genre …" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button id="clear">✕</button>
+    </div>
+    <div class="chiprow">
+      <div class="chip" id="favChip">★ Favoriten</div>
+      <div class="chip" id="newChip">✦ Neu</div>
+      <select id="genre"><option value="">Alle Genres</option></select>
+    </div>
+    <div class="stats" id="stats">lädt…</div>
+    <div class="azbar" id="azbar"></div>
+  </div>
+  <main id="results"></main>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="dialog">
+    <div class="dtitle pixel"><span id="dialogTitle">Dialog</span><span class="xbtn" id="dialogClose">✕</span></div>
+    <div class="dbody" id="dialogBody"></div>
+    <div class="formmsg" id="formmsg"></div>
+    <div class="dactions" id="dialogActions"></div>
+  </div>
+</div>
+
+
+
+<script src="local_shim.js"></script>
+<script>
+const RAW = {"albums": [{"row": 2, "artist": "Eminem", "title": "The Marshall Mathers LP", "year": 2000, "genre": "Hip-Hop/Rap", "favorit": true, "cds": [["Public Service Announcement 2000", "Kill You", "Stan (feat. Dido)", "Paul (Skit)", "Who Knew", "Steve Berman (Skit)", "The Way I Am", "The Real Slim Shady", "Remember Me? (feat. RBX & Sticky Fingaz)", "I'm Back", "Marshall Mathers", "Ken Kaniff (Skit)", "Drug Ballad (feat. Dina Rae)", "Amityville (feat. Bizarre)", "Bitch Please II (feat. Dr. Dre, Snoop Dogg, Xzibit & Nate Dogg)", "Kim", "Under the Influence (feat. D12)", "Criminal"]], "isMix": false}, {"row": 3, "artist": "Limp Bizkit", "title": "Take a look Around (theme from MI:2)", "year": 2000, "genre": "Nu Metal", "favorit": true, "cds": [["Take a Look Around (Theme from M:I-2) (Radio Edit)", "N 2 Gether Now (Live)", "Nookie (Live)", "N 2 Gether Now (Video)"]], "isMix": false}, {"row": 4, "artist": "Limp Bizkit", "title": "My Generation", "year": 2000, "genre": "Nu Metal", "favorit": true, "cds": [["My Generation (Explicit)", "Back o da Bus (Non-LP Version)", "Faith (LP Version)", "My Generation (Radio Edit) [Video]"]], "isMix": false}, {"row": 5, "artist": "Rammstein", "title": "Liebe ist für alle da", "year": 2009, "genre": "Neue Deutsche Härte / Industrial Metal", "favorit": true, "cds": [["Rammlied", "Ich tu dir weh", "Waidmanns Heil", "Haifisch", "B********", "Frühling in Paris", "Wiener Blut", "Pussy", "Liebe ist für alle da", "Mehr", "Roter Sand"]], "isMix": false}, {"row": 6, "artist": "Limp Bizkit", "title": "Chocolate starfish and the hotdog flavored water", "year": 2000, "genre": "Nu Metal / Rap Metal", "favorit": true, "cds": [["Intro", "Hot Dog", "My Generation", "Full Nelson", "My Way", "Rollin' (Air Raid Vehicle)", "Livin' It Up", "The One", "Getcha Groove On (feat. Xzibit)", "Take a Look Around", "It'll Be OK", "Boiler", "Hold On (feat. Scott Weiland)", "Rollin' (Urban Assault Vehicle) (feat. DMX, Method Man & Redman)", "Outro"]], "isMix": false}, {"row": 7, "artist": "The Cure", "title": "Greatest Hits", "year": 2001, "genre": "Alternative Rock / New Wave / Gothic Rock", "favorit": true, "cds": [["Boys Don't Cry", "A Forest", "Let's Go to Bed", "The Walk", "The Lovecats", "Inbetween Days", "Close to Me", "Why Can't I Be You?", "Just Like Heaven", "Lullaby", "Lovesong", "Never Enough", "High", "Friday I'm in Love", "Mint Car", "Wrong Number", "Cut Here", "Just Say Yes"]], "isMix": false}, {"row": 8, "artist": "Heinz Rudolf Kunze", "title": "Aller Herren Länder", "year": 1999, "genre": "Rock / Pop", "favorit": true, "cds": [["Aller Herren Länder", "Das perfekte Verbrechen", "Stärker als der Mond"]], "isMix": false}, {"row": 9, "artist": "Bruce Springsteen", "title": "Greatest Hits", "year": 1995, "genre": "Rock", "favorit": true, "cds": [["Born to Run", "Thunder Road", "Badlands", "The River", "Hungry Heart", "Atlantic City", "Dancing in the Dark", "Born in the U.S.A.", "My Hometown", "Glory Days", "Brilliant Disguise", "Human Touch", "Better Days", "Streets of Philadelphia", "Secret Garden", "Murder Incorporated", "Blood Brothers", "This Hard Land"]], "isMix": false}, {"row": 10, "artist": "Red Hot Chili Peppers", "title": "Greatest Hits", "year": 2003, "genre": "Funk Rock / Alternative Rock", "favorit": true, "cds": [["Under the Bridge", "Give It Away", "Californication", "Scar Tissue", "Soul to Squeeze", "Otherside", "Suck My Kiss", "By the Way", "Parallel Universe", "Breaking the Girl", "My Friends", "Higher Ground", "Universally Speaking", "Road Trippin'", "Fortune Faded", "Save the Population"]], "isMix": false}, {"row": 11, "artist": "Modern Talking", "title": "Back for good", "year": 1998, "genre": "Pop / Eurodance", "favorit": true, "cds": [["You're My Heart, You're My Soul (New Version)", "Brother Louie (New Version)", "I Will Follow You (New Hit '98)", "Cheri Cheri Lady (New Version)", "You Can Win If You Want (New Version)", "Don't Play with My Heart (New Hit '98)", "Atlantis Is Calling (New Version)", "Geronimo's Cadillac (New Version)", "Give Me Peace on Earth (New Version)", "We Take the Chance (New Hit '98)", "Jet Airliner (New Version)", "Lady Lai (New Version)", "Anything Is Possible (New Hit '98)", "In 100 Years (New Version)", "Angie's Heart (New Version)", "You're My Heart, You're My Soul (Modern Talking Mix '98) (feat. Eric Singleton)", "You Can Win If You Want (Original No. 1 Mix '84)", "No. 1 Hit Medley"]], "isMix": false}, {"row": 12, "artist": "Evanescence", "title": "Fallen", "year": 2003, "genre": "Alternative Metal / Nu Metal", "favorit": true, "cds": [["Going Under", "Bring Me to Life (feat. Paul McCoy)", "Everybody's Fool", "My Immortal", "Haunted", "Tourniquet", "Imaginary", "Taking Over Me", "Hello", "My Last Breath", "Whisper"]], "isMix": false}, {"row": 13, "artist": "Papa Roach", "title": "the best of (To be loved)", "year": 2010, "genre": "Rock / Nu Metal", "favorit": true, "cds": [["Broken Home", "Last Resort", "Time and Time Again", "She Loves Me Not", "Scars", "Getting Away with Murder", "Just Go (Never Look Back)", "...To Be Loved", "Reckless", "Had Enough (Acoustic)", "Forever (Live)", "Hollywood Whore", "Lifeline", "Scars (Acoustic)"]], "isMix": false}, {"row": 14, "artist": "Sting", "title": "Fields of Gold", "year": 1994, "genre": "Rock / Pop", "favorit": true, "cds": [["When We Dance", "If You Love Somebody Set Them Free", "Fields of Gold", "All This Time", "Englishman in New York", "Mad About You", "It's Probably Me", "They Dance Alone (Cueca Solo)", "If I Ever Lose My Faith in You", "Fragile", "Love Is Stronger Than Justice (The Munificent Seven)", "We'll Be Together", "Moon over Bourbon Street", "Love Is the Seventh Wave", "Russians", "Why Should I Cry for You?", "This Cowboy Song"]], "isMix": false}, {"row": 15, "artist": "Alice in Chains", "title": "MTV Unplugged", "year": 1996, "genre": "Grunge / Akustik-Rock", "favorit": true, "cds": [["Nutshell", "Brother", "No Excuses", "Sludge Factory", "Down in a Hole", "Angry Chair", "Rooster", "Got Me Wrong", "Heaven Beside You", "Would?", "Frogs", "Over Now", "Killer Is Me"]], "isMix": false}, {"row": 16, "artist": "Limp Bizkit", "title": "Greatest Hitz", "year": 2005, "genre": "Nu Metal / Rap Rock", "favorit": true, "cds": [["Counterfeit", "Faith", "Nookie", "Break Stuff", "Re-Arranged", "N 2 Gether Now (feat. Method Man)", "Take a Look Around", "My Generation", "Rollin' (Air Raid Vehicle)", "Boiler", "My Way", "Eat You Alive", "Behind Blue Eyes", "Build a Bridge", "Why", "Lean on Me", "Home Sweet Home / Bittersweet Symphony"]], "isMix": false}, {"row": 17, "artist": "Linkin Park", "title": "Hybrid Theory", "year": 2000, "genre": "Nu Metal", "favorit": true, "cds": [["Papercut", "One Step Closer", "With You", "Points of Authority", "Crawling", "Runaway", "By Myself", "In the End", "A Place for My Head", "Forgotten", "Cure for the Itch", "Pushing Me Away"]], "isMix": false}, {"row": 18, "artist": "Pearl Jam", "title": "Pearl Jam", "year": 2006, "genre": "Alternative Rock / Grunge", "favorit": true, "cds": [["Life Wasted", "World Wide Suicide", "Comatose", "Severed Hand", "Marker in the Sand", "Parachutes", "Unemployable", "Big Wave", "Gone", "Wasted Reprise", "Army Reserve", "Come Back", "Inside Job"]], "isMix": false}, {"row": 19, "artist": "Westernhagen", "title": "so weit...", "year": 2000, "genre": "Rock", "favorit": true, "cds": [["Du bist nicht allein", "Rosanna", "Sexy", "Mit 18", "Lass uns leben", "Willenlos", "Es geht mir gut", "Nimm mich mit 2000", "Freiheit", "Fertig", "Mit Pfefferminz bin ich dein Prinz", "Wieder hier", "Schweigen ist feige", "Rosi (Männer sind so schwach)", "Weil ich dich liebe", "Steh' auf", "Geiler is' schon", "Johnny W."]], "isMix": false}, {"row": 20, "artist": "The Cranberries", "title": "No Need to Argue", "year": 1994, "genre": "Alternative Rock", "favorit": true, "cds": [["Ode to My Family", "I Can't Be with You", "Twenty One", "Zombie", "Empty", "Everything I Said", "The Icicle Melts", "Disappointment", "Ridiculous Thoughts", "Dreaming My Dreams", "Yeat's Grave", "Daffodil Lament", "No Need to Argue"]], "isMix": false}, {"row": 21, "artist": "Wolfgang Petry", "title": "Alles", "year": 1996, "genre": "Schlager", "favorit": true, "cds": [["Verlieben, Verloren, Vergessen, Verzeih'n", "Der Himmel brennt", "Du bist ein Wunder", "Wahnsinn", "Wieso und weshalb...", "Sommer in der Stadt", "Sieben Tage, sieben Nächte", "Ganz oder gar nicht", "Frei für dich", "Jessica", "Bronze, Silber und Gold", "Tu's doch", "Gianna", "Sehnsucht nach dir", "Scheißegal", "Ruhrgebiet", "Denn eines Tags vielleicht", "Nur ein kleines Stück Papier", "Mein Zuhaus", "Der Wolfgang Petry-Hitmix"]], "isMix": false}, {"row": 22, "artist": "Limp Bizkit", "title": "results may vary", "year": 2003, "genre": "Nu Metal / Alternative Rock", "favorit": true, "cds": [["Re-Entry", "Eat You Alive", "Gimme the Mic", "Underneath the Gun", "Down Another Day", "Almost Over", "Build a Bridge", "Red Light-Green Light (feat. Snoop Dogg)", "The Only One", "Let Me Down", "Lonely World", "Phenomenon", "Creamer (Radio Is Dead)", "Head for the Barricade", "Behind Blue Eyes", "Drown"]], "isMix": false}, {"row": 23, "artist": "Billy Joel", "title": "Storm Front", "year": 1989, "genre": "Rock / Pop-Rock", "favorit": true, "cds": [["That's Not Her Style", "We Didn't Start the Fire", "The Downeaster 'Alexa'", "I Go to Extremes", "Shameless", "Storm Front", "Leningrad", "State of Grace", "When in Rome", "And So It Goes"]], "isMix": false}, {"row": 24, "artist": "Juli", "title": "Es ist Juli", "year": 2004, "genre": "Pop-Rock / Deutschpop", "favorit": true, "cds": [["Warum", "Sterne", "Geile Zeit", "Tage wie dieser", "Tränenschwer", "Perfekte Welle", "Regen und Meer", "November", "Anders", "Kurz vor der Sonne", "Ich verschwinde", "Wenn du lachst", "Geile Zeit (Video, Enhanced-Teil)", "Perfekte Welle (Making of, Enhanced-Teil)"]], "isMix": false}, {"row": 25, "artist": "Dido", "title": "life for rent", "year": 2003, "genre": "Pop", "favorit": true, "cds": [["White Flag", "Stoned", "Life for Rent", "Mary's in India", "See You When You're 40", "Don't Leave Home", "Who Makes You Feel", "Sand in My Shoes", "Do You Have a Little Time", "This Land Is Mine", "See the Sun", "Closer (Hidden Track in Titel 11)"]], "isMix": false}, {"row": 26, "artist": "Radiohead", "title": "In rainbows", "year": 2007, "genre": "Alternative Rock / Art Rock", "favorit": true, "cds": [["15 Step", "Bodysnatchers", "Nude", "Weird Fishes/Arpeggi", "All I Need", "Faust Arp", "Reckoner", "House of Cards", "Jigsaw Falling into Place", "Videotape"]], "isMix": false}, {"row": 27, "artist": "Ozzy", "title": "Dreamer", "year": 2002, "genre": "Rock / Metal", "favorit": true, "cds": [["Dreamer (Album Version)", "Black Skies", "Dreamer (Acoustic Version)", "Dreamer (Video)"]], "isMix": false}, {"row": 28, "artist": "Staind", "title": "Break the cycle", "year": 2001, "genre": "Nu Metal / Post-Grunge", "favorit": true, "cds": [["Open Your Eyes", "Pressure", "Fade", "It's Been Awhile", "Change", "Can't Believe", "Epiphany", "Suffer", "Warm Safe Place", "For You", "Outside", "Waste", "Take It", "Outside (Live Version)"]], "isMix": false}, {"row": 29, "artist": "Die Fantastischen 4", "title": "4 Gewinnt", "year": 1992, "genre": "Hip-Hop", "favorit": false, "cds": [["Vier gewinnt", "Die Da !?!", "Hört euch den hier an", "Saft", "Dicker Pulli", "Na gut", "Einen noch", "Es wird Regen geben", "Nenn ihn Präsident", "Plattenspieler", "Hip Hop Musik", "Laß die Sonne rein", "Thomas und die Fraun", "Nonixnarretz", "Jaaa", "Reich", "Individuell aber schnell", "Arschloch"]], "isMix": false}, {"row": 30, "artist": "Die Fantastischen 4", "title": "Sie ist weg", "year": 1995, "genre": "Hip-Hop", "favorit": false, "cds": [["Sie ist weg (Video-Version)", "Sie ist weg (Severin-Resonanz-Mix)", "Sie ist weg (Saafi-Bros.-Mix)", "Sie ist weg (DJ Friction-Mix)", "Sie ist weg (F4-RMX - Sie ist weggeschossen)", "Sie ist weg (Pronoia-Mix - Sie ist nicht da)"]], "isMix": false}, {"row": 31, "artist": "Die Flippers", "title": "Nur das Beste", "year": 2000, "genre": "Schlager", "favorit": false, "cds": [["Moskau im Regen", "Hasta la vista", "Lotosblume", "Sommerwind", "Weine nicht, kleine Eva", "Sieben Tage", "Ciao, ciao Marina", "Rote Rosen", "Santo Domingo", "Liebeskummer", "Arrivederci Maria", "Rhodos", "Santa Maria goodbye", "Mädchen von Capri", "Sonnenschein am Strand von San José"]], "isMix": false}, {"row": 32, "artist": "Die Flippers", "title": "Best of Flippers", "year": 1998, "genre": "Schlager", "favorit": false, "cds": [["Weine nicht, kleine Eva", "Sha la la I Love You", "Santa Maria", "St. Tropez", "Traum von Mykonos", "Bleib mir treu", "Auf rote Rosen fallen Tränen", "Aber dich gibt's nur einmal für mich", "Nur wer die Sehnsucht kennt", "Weisse Rosen im Sommerwind", "Heut' Nacht hab' ich dich verloren", "Malaika", "Alles Liebe, alles Gute", "Mexico"]], "isMix": false}, {"row": 33, "artist": "Foo Fighters", "title": "Greatest Hits", "year": 2009, "genre": "Alternative Rock / Post-Grunge", "favorit": false, "cds": [["All My Life", "Best of You", "Everlong", "The Pretender", "My Hero", "Learn to Fly", "Times Like These", "Monkey Wrench", "Big Me", "Breakout", "Long Road to Ruin", "This Is a Call", "Skin and Bones", "Wheels", "Word Forward", "Everlong (Acoustic)"]], "isMix": false}, {"row": 34, "artist": "Foreigner", "title": "The Platinum Collection", "year": 1999, "genre": "Rock", "favorit": false, "cds": [["I Want to Know What Love Is", "Waiting for a Girl Like You", "Urgent", "Say You Will", "Midnight Blue", "Cold as Ice", "Hot Blooded", "I Don't Want to Live Without You", "Just Between You and Me", "Juke Box Hero", "That Was Yesterday", "With Heaven on Our Side", "Dirty White Boy", "Feels Like the First Time", "Break It Up", "Until I Make You Mine", "A Love in Vain"]], "isMix": false}, {"row": 35, "artist": "Fugees", "title": "Killing me softly", "year": 1996, "genre": "Hip-Hop / R&B", "favorit": false, "cds": [["Killing Me Softly (LP Version w/out Intro)", "Killing Me Softly (Album Instrumental)", "Cowboys (Album Version)", "Nappy Heads (Remix)"]], "isMix": false}, {"row": 36, "artist": "Fury in the Slaughterhouse", "title": "Fury In The Slaughterhouse", "year": 1988, "genre": "Rock", "favorit": false, "cds": [["Tears & Fears", "Kick It Out", "Bangkok", "Then She Said", "Cry It Out", "Time To Wonder", "Pure Love", "No Man's Land", "Party Girl / Pussycat Run", "Pure Love (Part Two)"]], "isMix": false}, {"row": 37, "artist": "Fury in the Slaughterhouse", "title": "Mono", "year": 1993, "genre": "Rock", "favorit": false, "cds": [["The Brainsong", "Every Generation Got Its Own Disease", "Dead Before I Was Born", "Radio Orchid", "Waiting for Paradise", "Haunted Head and Heart", "When I'm Dead and Gone", "When God Goes Home", "Friendly Fire", "Hell Gets You Nowhere", "Money Rules", "In Your Room", "Money Junkie"]], "isMix": false}, {"row": 38, "artist": "Fury in the Slaughterhouse", "title": "Brilliant Thieves (Special Limited Edition)", "year": 1997, "genre": "Rock", "favorit": false, "cds": [["Intro", "Bring Me Home", "Riding On A Dead Horse", "Turn Around", "Don't Slow Down", "Around The World In 80 Days", "Afternoon In The Cemetery", "In Love With A Clown", "Enough Is Enough", "Brilliant Thieves", "Bar Des Boulistes", "My Little World", "Gero Hat Geburtstag", "Ship Of Fools", "Out On The Weekend"], ["Disillusion Avenue", "Time To Wonder (Heartbeat-Version '97)", "I Just Can't Believe", "Riding On A Dead Horse (Live)", "Reptile (Live)", "Bring Me Home (NOFX-Mix)", "Every Generation Got Its Own Disease (Live)", "My Little World (Live)", "Whitebread...", "Out On The Weekend (Jens Krause Und Das Geheimnis Der Stereophonie-Mix)", "Der Jörg-Sievers-Blues"]], "isMix": false}, {"row": 39, "artist": "Fury in the Slaughterhouse", "title": "The Hearing and the Sense of Balance", "year": 1995, "genre": "Rock", "favorit": false, "cds": [["Down There", "Kiss the Judas", "Milk and Honey", "Ghosttown", "Hello and Goodbye", "Hang the DJ", "Dancing in the Sunshine of the Dark", "Your Love Won't Take Me Anywhere", "Next to You", "Spit into the Fire", "Princess of New York", "Rainy April Day"]], "isMix": false}, {"row": 40, "artist": "Fury in the Slaughterhouse", "title": "Brilliant Thieves", "year": 1997, "genre": "Rock", "favorit": false, "cds": [["Intro", "Bring Me Home", "Riding on a Dead Horse", "Turn Around", "Don't Slow Down", "Around the World in 80 Days", "Afternoon in the Cemetery", "In Love with a Clown", "Enough Is Enough", "Brilliant Thieves", "Bar des Boulistes", "My Little World", "Gero hat Geburtstag", "Ship of Fools", "Out on the Weekend"]], "isMix": false}, {"row": 41, "artist": "Elton John", "title": "Love Songs", "year": 1995, "genre": "Pop / Rock", "favorit": false, "cds": [["Sacrifice", "Candle in the Wind", "I Guess That's Why They Call It the Blues", "Don't Let the Sun Go Down on Me", "Sorry Seems to Be the Hardest Word", "Blue Eyes", "Daniel", "Nikita", "Your Song", "The One", "Someone Saved My Life Tonight", "True Love", "Can You Feel the Love Tonight", "Circle of Life", "Blessed", "Please", "Song for Guy"]], "isMix": false}, {"row": 42, "artist": "Elvis", "title": "Elvis 2000 - Best Of The King", "year": 2000, "genre": "Rock'n'Roll", "favorit": false, "cds": [["Jailhouse Rock", "Don't Be Cruel", "All Shook Up", "Return To Sender", "(Let Me Be Your) Teddy Bear", "Good Luck Charm", "Blue Suede Shoes", "Hound Dog", "My Baby Left Me", "That's All Right", "(You're So Square) Baby I Don't Care", "Hard Headed Woman", "Lawdy, Miss Clawdy", "Good Rockin' Tonight", "Mystery Train", "Such A Night", "A Big Hunk O' Love", "King Creole", "Burning Love", "Tutti Frutti"], ["Are You Lonesome Tonight?", "Can't Help Falling In Love", "In The Ghetto", "Suspicious Minds", "Love Me Tender", "Don't", "Always On My Mind", "One Night", "It's Now Or Never", "Love Me", "Kiss Me Quick", "She's Not You", "(Now And Then There's) A Fool Such As I", "(Marie's The Name) His Latest Flame", "(You're The) Devil In Disguise", "Stuck On You", "Heartbreak Hotel", "Fever", "Treat Me Nice", "Wooden Heart"]], "isMix": false}, {"row": 43, "artist": "Enya", "title": "a day without rain", "year": 2000, "genre": "New Age / Chamber Pop", "favorit": false, "cds": [["A Day Without Rain", "Wild Child", "Only Time", "Tempus Vernum", "Deora Ar Mo Chroí", "Flora's Secret", "Fallen Embers", "Silver Inches", "Pilgrim", "One by One", "The First of Autumn", "Lazy Days"]], "isMix": false}, {"row": 44, "artist": "Eric Clapton", "title": "Clapton Chronicles - The Best Of Eric Clapton", "year": 1999, "genre": "Rock / Blues", "favorit": false, "cds": [["Blue Eyes Blue", "Change The World", "My Father's Eyes", "Tears In Heaven", "Layla (Unplugged Version)", "Pretending", "Bad Love", "Before You Accuse Me (Take A Look At Yourself)", "It's In The Way That You Use It", "Forever Man", "Running On Faith (Unplugged Version)", "She's Waiting", "River Of Tears", "(I) Get Lost", "Wonderful Tonight (Live Edit)"]], "isMix": false}, {"row": 45, "artist": "Daft Punk", "title": "One more Time", "year": 2000, "genre": "House / Electronic", "favorit": false, "cds": [["One More Time (Short Radio Edit)", "One More Time (Radio Edit)", "One More Time (Club Mix)"]], "isMix": false}, {"row": 46, "artist": "Depeche Mode", "title": "The Singles 86>98", "year": 1998, "genre": "Synth-Pop", "favorit": false, "cds": [["Stripped", "A Question of Lust", "A Question of Time", "Strangelove", "Never Let Me Down Again", "Behind the Wheel", "Personal Jesus", "Enjoy the Silence", "Policy of Truth", "World in My Eyes"], ["I Feel You", "Walking in My Shoes", "Condemnation", "In Your Room", "Barrel of a Gun", "It's No Good", "Home", "Useless", "Only When I Lose Myself", "Little 15", "Everything Counts (Live)"]], "isMix": false}, {"row": 47, "artist": "Dido", "title": "no angel", "year": 2000, "genre": "Pop", "favorit": false, "cds": [["Here with Me", "Hunter", "Don't Think of Me", "My Lover's Gone", "All You Want", "Thank You", "Honestly OK", "Slide", "Isobel", "I'm No Angel", "My Life", "Take My Hand"]], "isMix": false}, {"row": 48, "artist": "DJ Bobo", "title": "Greatest Hits", "year": 2006, "genre": "Dance / Eurodance", "favorit": false, "cds": [["Secrets of Love (feat. Sandra)", "Freedom", "Everybody", "What a Feeling (feat. Irene Cara)", "I Believe", "There's a Party", "Pirates of Dance", "Pray", "Chihuahua", "Love Is the Price", "Let the Dream Come True", "Games People Play", "Amazing Life", "Somebody Dance with Me", "Respect Yourself", "Feels Like Heaven", "Together", "It's My Life", "Where Is Your Love", "Shadows of the Night"]], "isMix": false}, {"row": 49, "artist": "Camouflage", "title": "The best of Camouflage We stroke the flames", "year": 1997, "genre": "Synth-Pop", "favorit": false, "cds": [["The Great Commandment", "Jealousy", "Sooner Than We Think", "Handsome", "One Fine Day", "Neighbours", "Suspicious Love", "A Picture of Life", "Love Is a Shield", "Strangers Thoughts", "Crime", "Heaven (I Want You)", "Waiting", "Close (We Stroke the Flames)", "I Once Had a Dream", "Love Is a Shield (William Orbit Dub Mix)"]], "isMix": false}, {"row": 50, "artist": "Christina Aguilera", "title": "Genie in a bottle", "year": 1999, "genre": "Pop", "favorit": false, "cds": [["Genie in a Bottle", "We're a Miracle", "Don't Make Me Love You"]], "isMix": false}, {"row": 51, "artist": "Corona", "title": "Remixes by lee marrow and mephisto The rhythm of the night", "year": 1994, "genre": "Eurodance", "favorit": false, "cds": [["The Rhythm Of The Night (Space RMX Feat. Ice MC)", "The Rhythm Of The Night (Red Light RMX)", "The Rhythm Of The Night (Club Groove Extended RMX)", "The Rhythm Of The Night (Lee Marrow RMX)", "The Rhythm Of The Night (Mephisto RMX)", "The Rhythm Of The Night (R.B.X. Euro Mix)", "The Rhythm Of The Night (Original Single Mix)"]], "isMix": false}, {"row": 52, "artist": "The Cranberries", "title": "everybody else is doing it, so why cant we?", "year": 1993, "genre": "Alternative Rock / Indie Pop", "favorit": false, "cds": [["I Still Do", "Dreams", "Sunday", "Pretty", "Waltzing Back", "Not Sorry", "Linger", "Wanted", "Still Can't...", "I Will Always", "How", "Put Me Down"]], "isMix": false}, {"row": 53, "artist": "Cro", "title": "Melodie", "year": 2014, "genre": "Hip-Hop / Pop", "favorit": false, "cds": [["Intro - I Can Feel It", "Meine Gang (Bang Bang)", "Erinnerung", "Traum", "Bad Chick", "Never Cro Up", "2006", "Cop Love", "Hey Girl", "Rennen", "Vielleicht", "Jetzt", "Wir waren hier II", "Melodie"]], "isMix": false}, {"row": 54, "artist": "Cro", "title": "RAOP", "year": 2012, "genre": "Pop-Rap / Deutschrap", "favorit": false, "cds": [["Intro", "King of Raop", "Easy", "Geile Welt", "Du", "Wie ich bin", "Meine Zeit", "Nie mehr", "Jeder Tag", "Genauso", "Einmal um die Welt", "Wir waren hier", "Ein Teil"]], "isMix": false}, {"row": 55, "artist": "Cyndi Lauper", "title": "Time after time the best of", "year": 2001, "genre": "Pop", "favorit": false, "cds": [["Girls Just Want to Have Fun", "She Bop", "I Drove All Night", "What's Going On", "Time After Time", "True Colors", "All Through the Night", "The World Is Stone", "I Don't Want to Be Your Friend", "The Goonies 'R' Good Enough", "Maybe He'll Know", "When You Were Mine", "Iko Iko", "Change of Heart", "Hey Now (Girls Just Want to Have Fun)"]], "isMix": false}, {"row": 56, "artist": "Bee Gees", "title": "One", "year": 1989, "genre": "Pop / Pop-Rock", "favorit": false, "cds": [["Ordinary Lives", "One", "Bodyguard", "It's My Neighborhood", "Tears", "Tokyo Nights", "Flesh and Blood", "Wish You Were Here", "House of Shame", "Will You Ever Let Me", "Wing and a Prayer"]], "isMix": false}, {"row": 57, "artist": "Bee Gees", "title": "E.S.P", "year": 1987, "genre": "Pop-Rock / Synthpop", "favorit": false, "cds": [["E.S.P.", "You Win Again", "Live or Die (Hold Me Like a Child)", "Giving Up the Ghost", "The Longest Night", "This Is Your Life", "Angela", "Overnight", "Crazy for Your Love", "Backtafunk", "E.S.P. (Reprise)"]], "isMix": false}, {"row": 58, "artist": "Billy Joel", "title": "River of Dreams", "year": 1993, "genre": "Rock", "favorit": false, "cds": [["No Man's Land", "The Great Wall of China", "Blonde over Blue", "A Minor Variation", "Shades of Grey", "All About Soul", "Lullabye (Goodnight, My Angel)", "The River of Dreams", "Two Thousand Years", "Famous Last Words"]], "isMix": false}, {"row": 59, "artist": "Bonez MC", "title": "Palmen aus Plastik", "year": 2016, "genre": "Deutschrap / Dancehall", "favorit": false, "cds": [["Intro", "Ciao Ciao", "Palmen aus Plastik", "Mörder (feat. Gzuz)", "Ohne mein Team (feat. Maxwell)", "Erblindet", "Evil (feat. Tommy Lee Sparta)", "Attackieren (feat. Hanybal)", "Killa (feat. D-Flame)", "Ruhe nach dem Sturm", "Vaporizer (feat. Trettmann)", "Dankbarkeit", "Skimaske (feat. Gzuz)", "Cabriolet", "Daneben (feat. Trettmann)"]], "isMix": false}, {"row": 60, "artist": "Bon Jovi", "title": "Keep the Faith", "year": 1992, "genre": "Rock", "favorit": false, "cds": [["I Believe", "Keep the Faith", "I'll Sleep When I'm Dead", "In These Arms", "Bed of Roses", "If I Was Your Mother", "Dry County", "Woman in Love", "Fear", "I Want You", "Blame It on the Love of Rock & Roll", "Little Bit of Soul", "Save a Prayer"]], "isMix": false}, {"row": 61, "artist": "The Boss Hoss", "title": "The Greatest Decade Best of 2006-2016", "year": 2016, "genre": "Country / Rock", "favorit": false, "cds": [["Don't Gimme That", "Do It", "Rodeo Radio", "My Personal Song", "Dos Bros", "Bullpower", "Last Day (Do or Die)", "Live It Up", "Hey Ya!", "Stallion Battalion", "I Say a Little Prayer", "Word Up", "Deals with the Devil", "Jolene (feat. The Common Linnets)", "I Like It Like That", "Rodeo Queen (Live)", "I Keep On Dancing (Live)"]], "isMix": false}, {"row": 62, "artist": "Boyzone", "title": "by request", "year": 1999, "genre": "Pop", "favorit": false, "cds": [["I Love the Way You Love Me", "No Matter What", "All That I Need", "Baby, Can I Hold You", "Picture of You", "Isn't It a Wonder", "A Different Beat", "Words", "Father and Son", "So Good", "Coming Home Now", "Key to My Life", "Love Me for a Reason", "When the Going Gets Tough", "You Needed Me", "When You Say Nothing at All", "All the Time in the World", "I'll Never Not Need You"]], "isMix": false}, {"row": 63, "artist": "Bryan Adams", "title": "So far so good", "year": 1993, "genre": "Rock", "favorit": false, "cds": [["Summer of '69", "Straight from the Heart", "It's Only Love", "Can't Stop This Thing We Started", "Do I Have to Say the Words?", "This Time", "Run to You", "Heaven", "Cuts Like a Knife", "(Everything I Do) I Do It for You", "Somebody", "Kids Wanna Rock", "Heat of the Night", "Please Forgive Me"]], "isMix": false}, {"row": 64, "artist": "Abba", "title": "The complete singles Collection", "year": 1999, "genre": "Pop", "favorit": false, "cds": [["People Need Love", "Ring Ring", "Waterloo (English Version)", "Waterloo (German Version)", "Honey, Honey", "So Long", "I Do, I Do, I Do, I Do, I Do", "S.O.S.", "Mamma Mia", "Fernando", "Dancing Queen", "Money, Money, Money", "Knowing Me, Knowing You", "The Name of the Game", "Take a Chance on Me", "Eagle", "Thank You for the Music", "Summer Night City"], ["Chiquitita", "Does Your Mother Know", "Voulez-Vous", "Gimme! Gimme! Gimme! (A Man After Midnight)", "I Have a Dream", "The Winner Takes It All", "Super Trouper", "Lay All Your Love on Me", "One of Us", "Head over Heels", "The Day Before You Came", "Under Attack", "Ring Ring (German Version)", "Happy New Year", "Wer im Wartesaal der Liebe steht"]], "isMix": false}, {"row": 65, "artist": "ACDC", "title": "Iron Man 2", "year": 2010, "genre": "Hard Rock", "favorit": false, "cds": [["Shoot to Thrill", "Rock 'n' Roll Damnation", "Guns for Hire", "Cold Hearted Man", "Back in Black", "Thunderstruck", "If You Want Blood (You've Got It)", "Evil Walks", "T.N.T.", "Hell Ain't a Bad Place to Be", "Have a Drink on Me", "The Razors Edge", "Let There Be Rock", "War Machine", "Highway to Hell"]], "isMix": false}, {"row": 66, "artist": "ACDC", "title": "Black Ice", "year": 2008, "genre": "Hard Rock", "favorit": false, "cds": [["Rock N Roll Train", "Skies on Fire", "Big Jack", "Anything Goes", "War Machine", "Smash N Grab", "Spoilin' for a Fight", "Wheels", "Decibel", "Stormy May Day", "She Likes Rock N Roll", "Money Made", "Rock N Roll Dream", "Rocking All the Way", "Black Ice"]], "isMix": false}, {"row": 67, "artist": "Ace of Base", "title": "Singles of the 90s", "year": 1999, "genre": "Pop / Dance", "favorit": false, "cds": [["C'est la vie (Always 21)", "The Sign", "Beautiful Life", "Hallo Hallo", "Always Have, Always Will", "Love in December", "All That She Wants", "Living in Danger", "Everytime It Rains", "Don't Turn Around", "Cruel Summer", "Happy Nation", "Lucky Love", "Never Gonna Say I'm Sorry", "Life Is a Flower", "Wheel of Fortune"]], "isMix": false}, {"row": 68, "artist": "Alanis Morissette", "title": "jagged little pill", "year": 1995, "genre": "Alternative Rock / Post-Grunge", "favorit": false, "cds": [["All I Really Want", "You Oughta Know", "Perfect", "Hand in My Pocket", "Right Through You", "Forgiven", "You Learn", "Head over Feet", "Mary Jane", "Ironic", "Not the Doctor", "Wake Up"]], "isMix": false}, {"row": 69, "artist": "Peter Gabriel", "title": "Hit", "year": 2003, "genre": "Rock", "favorit": false, "cds": [["Solsbury Hill", "Shock the Monkey", "Sledgehammer", "Don't Give Up", "Games Without Frontiers", "Big Time", "Burn You Up, Burn You Down", "Growing Up", "Digging in the Dirt", "Blood of Eden", "More Than This", "Biko", "Steam", "Red Rain", "Here Comes the Flood"], ["San Jacinto", "No Self Control", "Cloudless", "The Rhythm of the Heat", "I Have the Touch", "I Grieve", "D.I.Y.", "A Different Drum", "The Drop", "The Tower That Ate People", "Lovetown", "Father, Son", "Signal to Noise", "Downside Up", "Washing of the Water"]], "isMix": false}, {"row": 70, "artist": "Peter Maffay", "title": "Der Weg 1979-93", "year": 1994, "genre": "Rock / Pop", "favorit": false, "cds": [["Der Weg", "Wie Feuer und Eis", "Zwei in einem Boot", "Zu spät", "Sorry Lady", "Steppenwolf", "Tiefer", "Alles nur Kino", "Sonne in der Nacht", "Karneval der Nacht", "Nessaja", "So bist du", "Wölfe", "Greenlights for Emotions", "Über 7 Brücken mußt du geh'n (Neuaufnahme)", "So schön"]], "isMix": false}, {"row": 71, "artist": "Pet Shop Boys", "title": "Discography the complete singles collection", "year": 1991, "genre": "Synth-Pop", "favorit": false, "cds": [["West End Girls", "Love Comes Quickly", "Opportunities (Let's Make Lots of Money)", "Suburbia", "It's a Sin", "What Have I Done to Deserve This?", "Rent", "Always on My Mind", "Heart", "Domino Dancing", "Left to My Own Devices", "It's Alright", "So Hard", "Being Boring", "Where the Streets Have No Name (I Can't Take My Eyes Off You)", "Jealousy", "DJ Culture", "Was It Worth It?"]], "isMix": false}, {"row": 72, "artist": "Phil Collins", "title": "But seriously", "year": 1989, "genre": "Pop-Rock", "favorit": false, "cds": [["Hang in Long Enough", "That's Just the Way It Is", "Do You Remember?", "Something Happened on the Way to Heaven", "Colours", "I Wish It Would Rain Down", "Another Day in Paradise", "Heat on the Street", "All of My Life", "Saturday Night and Sunday Morning", "Father to Son", "Find a Way to My Heart"]], "isMix": false}, {"row": 73, "artist": "Phil Collins", "title": "Testify", "year": 2002, "genre": "Pop-Rock", "favorit": false, "cds": [["Wake Up Call", "Come with Me", "Testify", "Don't Get Me Started", "Swing Low", "It's Not Too Late", "This Love This Heart", "Driving Me Crazy", "The Least You Can Do", "Can't Stop Loving You", "Thru My Eyes", "You Touch My Heart"]], "isMix": false}, {"row": 74, "artist": "Phil Collins", "title": "Dance into the light", "year": 1996, "genre": "Pop-Rock", "favorit": false, "cds": [["Dance into the Light", "That's What You Said", "Lorenzo", "Just Another Story", "Love Police", "Wear My Hat", "It's in Your Eyes", "Oughta Know by Now", "Take Me Down", "The Same Moon", "River So Wide", "No Matter Who", "The Times They Are A-Changin'"]], "isMix": false}, {"row": 75, "artist": "Phil Collins", "title": "Both Sides", "year": 1993, "genre": "Pop-Rock", "favorit": false, "cds": [["Both Sides of the Story", "Can't Turn Back the Years", "Everyday", "I've Forgotten Everything", "We're Sons of Our Fathers", "Can't Find My Way", "Survivors", "We Fly So Close", "There's a Place for Us", "We Wait and We Wonder", "Please Come Out Tonight"]], "isMix": false}, {"row": 76, "artist": "Pink", "title": "Greatest Hits... So far!!!", "year": 2010, "genre": "Pop-Rock", "favorit": false, "cds": [["Get The Party Started", "There You Go", "Don't Let Me Get Me", "Just Like A Pill", "Family Portrait", "Trouble", "Stupid Girls", "Who Knew", "U + Ur Hand", "Dear Mr. President", "Leave Me Alone (I'm Lonely)", "So What", "Sober", "Please Don't Leave Me", "Bad Influence", "Funhouse", "I Don't Believe You", "Whataya Want From Me", "Raise Your Glass", "F**kin' Perfect", "Heartbreak Down"]], "isMix": false}, {"row": 77, "artist": "Pink", "title": "Funhouse", "year": 2008, "genre": "Pop-Rock", "favorit": false, "cds": [["So What", "Sober", "I Don't Believe You", "One Foot Wrong", "Please Don't Leave Me", "Bad Influence", "Funhouse", "Crystal Ball", "Mean", "It's All Your Fault", "Ave Mary A", "Glitter in the Air", "This Is How It Goes Down (feat. Travis McCoy)"]], "isMix": false}, {"row": 78, "artist": "Pink", "title": "I'm not Dead", "year": 2006, "genre": "Pop-Rock", "favorit": false, "cds": [["Stupid Girls", "Who Knew", "Long Way to Happy", "Nobody Knows", "Dear Mr. President (feat. Indigo Girls)", "I'm Not Dead", "'Cuz I Can", "Leave Me Alone (I'm Lonely)", "U + Ur Hand", "Runaway", "The One That Got Away", "I Got Money Now", "Conversations with My 13 Year Old Self", "I Have Seen the Rain (Hidden Track)"]], "isMix": false}, {"row": 79, "artist": "Pitbull", "title": "Greatest Hits", "year": 2017, "genre": "Hip-Hop / Pop / Latin", "favorit": false, "cds": [["Give Me Everything (feat. Ne-Yo, Afrojack & Nayer)", "Timber (feat. Kesha)", "I Know You Want Me (Calle Ocho)", "Don't Stop the Party (feat. TJR)", "Hotel Room Service", "Hey Baby (Drop It to the Floor) (feat. T-Pain)", "Rain Over Me (feat. Marc Anthony)", "Time of Our Lives (feat. Ne-Yo)", "International Love (feat. Chris Brown)", "Feel This Moment (feat. Christina Aguilera)", "Fireball (feat. John Ryan)", "Jungle (feat. E-40 & Abraham Mateo)", "Locas (feat. Lil Jon)"]], "isMix": false}, {"row": 80, "artist": "P.O.D.", "title": "Satellite", "year": 2001, "genre": "Nu Metal / Rap Rock", "favorit": false, "cds": [["Set It Off", "Alive", "Boom", "Youth of the Nation", "Celestial", "Satellite", "Ridiculous (feat. Eek-a-Mouse)", "The Messenjah", "Guitarras de Amor", "Anything Right", "Ghetto", "Masterpiece Conspiracy", "Without Jah, Nothin' (feat. H.R.)", "Thinking About Forever", "Portrait", "Whatever It Takes"]], "isMix": false}, {"row": 81, "artist": "Die Prinzen", "title": "Ganz oben Hits MCMXCI-MCMXCVII", "year": 1997, "genre": "Pop", "favorit": false, "cds": [["Ganz oben", "Gabi und Klaus", "Millionär", "Mann im Mond", "Mein Fahrrad", "Küssen verboten", "Bombe", "In der Nacht ist der Mensch nicht gern alleine", "Vergammelte Speisen", "Sandmännchen", "Alles nur geklaut", "Schlottersteinhymne", "Überall", "Abgehau'n", "Was soll ich ihr schenken?", "(Du musst ein) Schwein sein", "Alles mit'm Mund", "Audi Victoria", "Der letzte Schrei", "Junimond"]], "isMix": false}, {"row": 82, "artist": "PUR", "title": "Abenteuerland", "year": 1995, "genre": "Pop-Rock", "favorit": false, "cds": [["Abenteuerland", "Ich lieb' dich (Egal wie das klingt)", "Leben", "Nur zu dir", "Ganz egal", "Dass es dir leid tut", "Kowalski V (Das Problem)", "Ein graues Haar", "Es tut weh", "Wut im Bauch", "Ruhe", "Ungeheuer", "In Gedanken", "Merlins Reise"]], "isMix": false}, {"row": 83, "artist": "PUR", "title": "LIVE", "year": 1992, "genre": "Pop-Rock", "favorit": false, "cds": [["Hab' mich wieder mal an dir betrunken", "Brüder (Stell dir vor)", "Bis der Wind sich dreht", "Drachen sollen fliegen", "Ohne dich", "Wenn sie diesen Tango hört", "Freunde", "Prinzessin", "D-Mark", "Lied für all die Vergessenen", "Funkelperlenaugen", "Lena", "Fallen"]], "isMix": false}, {"row": 84, "artist": "OMC", "title": "How bizarre", "year": 1996, "genre": "Pop / Hip-Hop", "favorit": false, "cds": [["How Bizarre (Radio Mix)", "How Bizarre (Album Mix)", "How Bizarre (Instrumental)", "How Bizarre (Dance Mix)"]], "isMix": false}, {"row": 85, "artist": "NANA", "title": "Lonely", "year": 1997, "genre": "Hip-Hop / Eurodance", "favorit": false, "cds": [["Lonely (Radio Mix)", "Lonely (Extended Mix)", "Lonely (Club Remix) (14-Tage-Lebenslänglich-Mix)"]], "isMix": false}, {"row": 86, "artist": "Natalie Imbruglia", "title": "Torn", "year": 1997, "genre": "Pop / Rock", "favorit": false, "cds": [["Torn", "Sometimes", "Contradictions", "Diving in the Deep End"]], "isMix": false}, {"row": 87, "artist": "Nirvana", "title": "Nevermind", "year": 1991, "genre": "Grunge / Alternative Rock", "favorit": true, "cds": [["Smells Like Teen Spirit", "In Bloom", "Come as You Are", "Breed", "Lithium", "Polly", "Territorial Pissings", "Drain You", "Lounge Act", "Stay Away", "On a Plain", "Something in the Way"]], "isMix": false}, {"row": 88, "artist": "No Doubt", "title": "Don't Speak", "year": 1996, "genre": "Rock / Pop", "favorit": false, "cds": [["Don't Speak (Album Version)", "Don't Speak (Alternate Version)", "Hey You (Acoustic Version)", "Greener Pastures"]], "isMix": false}, {"row": 89, "artist": "The Notorious BIG", "title": "Tribute to the Notorious BIG", "year": 1997, "genre": "Hip-Hop", "favorit": false, "cds": [["I'll Be Missing You (Puff Daddy & Faith Evans feat. 112)", "We'll Always Love Big Poppa (The Lox)", "Cry On (112)"]], "isMix": false}, {"row": 90, "artist": "MANOWAR", "title": "Warriors of the World 10th Anniversary remastered edition", "year": 2013, "genre": "Heavy Metal", "favorit": false, "cds": [["Call to Arms", "The Fight for Freedom", "Nessun Dorma", "Valhalla", "Swords in the Wind", "An American Trilogy", "The March", "Warriors of the World United", "Hand of Doom", "House of Death", "Fight Until We Die", "House of Death (Live)"]], "isMix": false}, {"row": 91, "artist": "Meat Loaf", "title": "Bat out of Hell II Back into Hell", "year": 1993, "genre": "Rock", "favorit": false, "cds": [["I'd Do Anything for Love (But I Won't Do That)", "Life Is a Lemon and I Want My Money Back", "Rock and Roll Dreams Come Through", "It Just Won't Quit", "Out of the Frying Pan (and into the Fire)", "Objects in the Rear View Mirror May Appear Closer than They Are", "Wasted Youth", "Everything Louder than Everything Else", "Good Girls Go to Heaven (Bad Girls Go Everywhere)", "Back into Hell", "Lost Boys and Golden Girls"]], "isMix": false}, {"row": 92, "artist": "Michael Wendler", "title": "Best of Vol.1", "year": 2007, "genre": "Schlager / Pop", "favorit": false, "cds": [["Sie liebt den DJ", "Salz in den Augen", "Schöner Mann", "180 Grad", "Mein letztes Gebet", "Prinzessin", "Wenn alle Stricke reißen", "Heuchler", "Es ist nicht alles Gold was glänzt", "Verdammte Liebe", "Die Engel fliehn", "Oh lieber Gott", "Vollidiot", "Tagebuch"]], "isMix": false}, {"row": 93, "artist": "Midnight Oil", "title": "Diesel and Dust", "year": 1987, "genre": "Alternative Rock / Rock", "favorit": false, "cds": [["Beds Are Burning", "Put Down That Weapon", "Dreamworld", "Arctic World", "Warakurna", "The Dead Heart", "Whoah", "Bullroarer", "Sell My Soul", "Sometimes", "Gunbarrel Highway"]], "isMix": false}, {"row": 94, "artist": "Mr. President", "title": "up'n away", "year": 1994, "genre": "Eurodance", "favorit": false, "cds": [["Up'n Away (Radio Mix)", "Up'n Away (Extended Mix)", "Up'n Away (Club Mix)"]], "isMix": false}, {"row": 95, "artist": "Münchener Freiheit", "title": "Definitive Collection", "year": 1997, "genre": "Pop-Rock", "favorit": false, "cds": [["Ohne dich (schlaf' ich heut Nacht nicht ein)", "Liebe auf den ersten Blick", "Tausendmal du", "S.O.S.", "Herzschlag ist der Takt", "Es gibt kein Nächstes Mal", "Herz aus Glas (Single Version)", "Oh, Baby", "Ich will dich nochmal", "Zeig mir die Nacht", "Bis wir uns wiedersehn", "Ich steh' auf Licht", "Rumpelstilzchen", "Verlieben Verlieren", "So heiß", "Komm zurück", "Viel zu viel", "Du bist Energie für mich", "Baby Blue", "So lang' man Träume noch leben kann (Single Version)"]], "isMix": false}, {"row": 96, "artist": "Laith Al-Deen", "title": "Die Liebe zum Detail", "year": 2007, "genre": "Pop", "favorit": false, "cds": [["Alles unter diesem Himmel", "Keine wie du", "Es wird nicht leicht sein", "Die Liebe zum Detail", "Hinter dir", "Du", "Worum es dir geht", "Wo du bist", "Der Beginn", "Ich hab's dir nie gesagt", "Ganz nah", "Stille", "Federleicht", "Outro"]], "isMix": false}, {"row": 97, "artist": "Laith Al-Deen", "title": "Ich will nur wissen...", "year": 2000, "genre": "Pop", "favorit": false, "cds": [["Viel Zu Weit", "Bilder Von Dir", "Fließende Wasser", "Hör Mir Zu", "Kleine Helden", "All das Leben", "Mittendrin", "Näher", "Nie Mehr", "Der Erste Wind", "Fliegen", "The Invitation (Ich Will Nur Wissen)"]], "isMix": false}, {"row": 98, "artist": "Lighthouse Family", "title": "Greatest Hits", "year": 2002, "genre": "Pop", "favorit": false, "cds": [["Lifted", "Ocean Drive", "High", "Raincloud", "Lost in Space", "Loving Every Minute", "(I Wish I Knew How It Would Feel to Be) Free/One", "Question of Faith", "Ain't No Sunshine", "Goodbye Heartbreak", "Run", "Postcard from Heaven", "Happy", "I Could Have Loved You", "Absolutely Everything"]], "isMix": false}, {"row": 99, "artist": "Limp Bizkit", "title": "Behind blue eyes", "year": 2003, "genre": "Nu Metal", "favorit": false, "cds": [["Behind Blue Eyes (Album Version)", "Just Drop Dead", "My Way (Remixed By DJ Lethal)", "Behind Blue Eyes (Video)"]], "isMix": false}, {"row": 100, "artist": "Liquido", "title": "Narcotic", "year": 1998, "genre": "Rock", "favorit": false, "cds": [["Narcotic (Radio Edit)", "Narcotic (Long Version)", "Amie", "Agree To Stay"]], "isMix": false}, {"row": 101, "artist": "Kings of Leon", "title": "Only by the night", "year": 2008, "genre": "Alternative Rock", "favorit": false, "cds": [["Closer", "Crawl", "Sex on Fire", "Use Somebody", "Manhattan", "Revelry", "17", "Notion", "I Want You", "Be Somebody", "Cold Desert"]], "isMix": false}, {"row": 102, "artist": "Joe Cocker", "title": "The ultimate Collection 1968-2003", "year": 2003, "genre": "Rock / Blues", "favorit": false, "cds": [["Unchain My Heart", "Feelin' Alright", "Summer in the City", "You Can Leave Your Hat On", "Up Where We Belong", "You Are So Beautiful", "With a Little Help from My Friends", "Cry Me a River (Live)", "The Letter (Live)", "Delta Lady", "Many Rivers to Cross", "When the Night Comes", "Night Calls", "Don't You Love Me Anymore", "She Came In Through the Bathroom Window"], ["Could You Be Loved", "Civilized Man", "First We Take Manhattan", "The Simple Things", "N'oubliez jamais", "That's All I Need to Know / Difendero (Live)", "Have a Little Faith in Me", "Don't Let the Sun Go Down on Me", "Now That the Magic Has Gone", "Sweet Lil' Woman", "(All I Know) Feels Like Forever", "My Father's Son", "Sorry Seems to Be the Hardest Word", "Never Tear Us Apart", "Ruby Lee"]], "isMix": false}, {"row": 104, "artist": "Haddaway", "title": "The Album", "year": 1993, "genre": "Dance / Eurodance", "favorit": false, "cds": [["What Is Love", "Shout", "Yeah", "Rock My Heart", "When the Feeling's Gone", "What Is Love (Rapino Brothers Mix)", "Life", "Mama's House", "Come Back (Love Has Got a Hold on Me)", "Sing About Love", "I Miss You", "Life (Album Re-Mix)"]], "isMix": false}, {"row": 105, "artist": "Haddaway", "title": "Fly Away", "year": 1995, "genre": "Eurodance", "favorit": false, "cds": [["Fly Away (Radio Edit)", "Fly Away (Extended Version)", "Fly Away (Hyper Space Mix)", "Fly Away (Maxi-Flight-Remix)", "Fly Away (Development Corporation Mix)"]], "isMix": false}, {"row": 106, "artist": "Haddaway", "title": "Life", "year": 1993, "genre": "Eurodance", "favorit": false, "cds": [["Life (Radio Edit)", "Life (12\" Mix)", "Life (Club Life)"]], "isMix": false}, {"row": 107, "artist": "H-Blockx", "title": "time to move", "year": 1994, "genre": "Crossover / Rock", "favorit": false, "cds": [["Pour Me a Glass", "Revolution", "Say Baby", "Move", "Fight the Force", "Little Girl", "Risin' High", "H-Blockx", "Real Love", "Do What You Wanna Do (Dave Don't Like It)", "Go Freaky", "Fuck the Facts", "Time to Fight"]], "isMix": false}, {"row": 108, "artist": "Herbert Grönemeyer", "title": "Ö", "year": 1988, "genre": "Pop-Rock", "favorit": false, "cds": [["Was soll das", "Vollmond", "Komet", "Mit Gott", "Halt mich", "Keine Heimat", "Herbsterwachen", "Fragwürdig", "Bist du taub", "Was soll das (Verlängerter Neumix)"]], "isMix": false}, {"row": 109, "artist": "Herbert Grönemeyer", "title": "4630 Bochum", "year": 1984, "genre": "Pop-Rock", "favorit": false, "cds": [["Bochum", "Männer", "Flugzeuge im Bauch", "Alkohol", "Amerika", "Für dich da", "Jetzt oder nie", "Fangfragen", "Erwischt", "Mambo"]], "isMix": false}, {"row": 110, "artist": "Heroes Del Silencio", "title": "Entre dos tierras", "year": 1992, "genre": "Rock", "favorit": false, "cds": [["Entre Dos Tierras (Radio Edit)", "El Cuadro", "Hologramas", "Entre Dos Tierras"]], "isMix": false}, {"row": 111, "artist": "Hootie & The Blowfish", "title": "cracked rear view", "year": 1994, "genre": "Rock", "favorit": false, "cds": [["Hannah Jane", "Hold My Hand", "Let Her Cry", "Only Wanna Be with You", "Running from an Angel", "I'm Goin' Home", "Drowning", "Time", "Look Away", "Not Even the Trees", "Goodbye", "Sometimes I Feel Like a Motherless Child (Hidden Track)"]], "isMix": false}, {"row": 112, "artist": "Genesis", "title": "We Can't dance", "year": 1991, "genre": "Rock", "favorit": false, "cds": [["No Son of Mine", "Jesus He Knows Me", "Driving the Last Spike", "I Can't Dance", "Never a Time", "Dreaming While You Sleep", "Tell Me Why", "Living Forever", "Hold On My Heart", "Way of the World", "Since I Lost You", "Fading Lights"]], "isMix": false}, {"row": 113, "artist": "Gestört aber Geil", "title": "#Zwei", "year": 2017, "genre": "Elektronisch / House", "favorit": false, "cds": [["Ich & Du (feat. Sebastian Hämmer)", "Geh Nich Weg (and Marc Narrow)", "Unter Meiner Haut (and Gobi Funk feat. Winkend Weiss)", "Sind Wir Freunde (feat. 3a)", "Sommerregen (feat. Toni Kraus)", "Demons", "My Pain (feat. Northern Lite)", "Glücklich Wie Die Kinder (and Two Magics)", "Ich Vermiss Dich Nicht (feat. Migo)", "Are You With Me (Gestört Aber Geil Remix / Lost Frequencies)", "Duo (feat. Ian Simmons)", "Ufo", "In My Life", "Wie Ein Regenbogen", "Golden Eyes", "Reality (Gestört Aber Geil Remix / Lost Frequencies feat. Janieck Devy)", "The Sun", "Outro"], ["Intro - Musik Ist...", "Ich & Du", "Are You With Me", "Ich Vermiss Dich Nicht", "My Pain", "Duo", "Sind Wir Freunde", "Unter Meiner Haut", "Geh Nicht Weg", "Golden Eyes", "Higher Place", "Demons", "Sommerregen", "The Sun", "Ufo", "Glücklich Wie Die Kinder", "In My Life", "Reality", "Wie Ein Regenbogen"]], "isMix": false}, {"row": 114, "artist": "Gigi D'Agostino", "title": "La Passion", "year": 1999, "genre": "Dance / Eurodance", "favorit": false, "cds": [["New Radio Cut", "Radio Cut", "L'Amour Toujours (LP Mix)", "Techno Fes E.P. II Mix", "Tanzen E.P. Mix"]], "isMix": false}, {"row": 115, "artist": "Glass Tiger", "title": "Premium Gold Collection", "year": 1999, "genre": "Rock", "favorit": false, "cds": [["Don't Forget Me (When I'm Gone)", "Someday", "My Town (feat. Rod Stewart)", "My Song", "Diamond Sun", "Where Did Our Love Go", "I'm Still Searching", "A Lifetime of Moments", "Thin Red Line", "Vanishing Tribe", "Ancient Evenings", "Simple Mission", "I Will Be There", "Rescued (By the Arms of Love)", "Blinded", "Animal Heart", "This Island Earth"]], "isMix": false}, {"row": 116, "artist": "Guano Apes", "title": "don't give me names", "year": 2000, "genre": "Rock", "favorit": false, "cds": [["Innocent Greed", "No Speech", "Big in Japan", "Money & Milk", "Living in a Lie", "Dödel Up", "I Want It", "Heaven", "Mine All Mine", "Too Close to Leave", "Gogan", "Anne Claire"]], "isMix": false}, {"row": 117, "artist": "Guns N' Roses", "title": "Greatest Hits", "year": 2004, "genre": "Hard Rock", "favorit": false, "cds": [["Welcome to the Jungle", "Sweet Child o' Mine", "Patience", "Paradise City", "Knockin' on Heaven's Door", "Civil War", "You Could Be Mine", "Don't Cry (Original)", "November Rain", "Live and Let Die", "Yesterdays", "Ain't It Fun", "Since I Don't Have You", "Sympathy for the Devil"]], "isMix": false}, {"row": 118, "artist": "Xavier Naidoo", "title": "Zwischenspiel Alles für den Herrn", "year": 2002, "genre": "Soul / R&B", "favorit": false, "cds": [["Wo willst du hin?", "Auf Herz und Nieren", "Wir gehören zusammen", "Abschied nehmen", "Kein Königreich", "Wir haben alles Gute vor uns", "Alle Männer müssen kämpfen", "That's the Way Love Is", "Brief", "Don't Give Up", "Gut aufgepasst", "Wenn ich schon Kinder hätte (Rap-Version)", "Kleines Lied (Kinderlied)", "Die Dinge singen hör ich so gern", "Keep Your Eyes on Me"], ["Himmel über Deutschland", "Ich lass sie sterben", "Bevor du gehst", "I'd Be Waiting", "Sie ist im Viereck angelegt", "Eyes R Shut", "Der Geist ist willig", "Mägde und Knechte", "Der Herr knickt alle Bäume", "Wer weiß schon, was der Morgen bringt", "Alles für den Herrn", "Wo driften wir hin", "Klagelieder", "Lied (Du nur, du)", "Wenn du es willst (Mir sind die Hände gebunden)"]], "isMix": false}, {"row": 119, "artist": "Xavier Naidoo", "title": "Telegramm für", "year": 2005, "genre": "Soul / R&B", "favorit": false, "cds": [["Und", "Bitte frag' mich nicht", "Dieser Weg", "Zeilen aus Gold", "Oh My Lady", "Seelenheil", "Wo komm ich her", "Bist du am Leben interessiert", "Abgrund", "Bist du aufgewacht", "Sie sind nicht dafür", "In deine Hände", "Du bist wie ein Segen", "Was wir alleine nicht schaffen", "Danke"]], "isMix": false}, {"row": 120, "artist": "Xavier Naidoo", "title": "Nicht von dieser Welt", "year": 1998, "genre": "Soul / R&B", "favorit": false, "cds": [["Seid ihr mit mir?", "000 Meilen", "Ernten was man sät", "Führ mich ans Licht", "Könnt ihr mich hören?", "Nicht von dieser Welt", "Freisein (Nachtschicht am Meer)", "Gute Aussichten", "Flugzeuge im Bauch", "Ich kann dich sehen", "Mich belogen", "This Is Not America", "Eigentlich gut", "Sag es laut"]], "isMix": false}, {"row": 121, "artist": "Westernhagen", "title": "Wieder hier", "year": 1998, "genre": "Rock", "favorit": false, "cds": [["Wieder hier", "Liebe ist alles", "Wieder hier (Album-Version)"]], "isMix": false}, {"row": 122, "artist": "Westernhagen", "title": "Westernhagen", "year": 1987, "genre": "Rock", "favorit": false, "cds": [["Narbenherz", "Weißt du, dass ich glücklich bin", "Depression", "Es geht weiter", "Freiheit", "Nimm mich mit", "Lieb mich", "Hey Mama", "Ganz und gar"]], "isMix": false}, {"row": 123, "artist": "Whigfield", "title": "Saturday Night", "year": 1994, "genre": "Eurodance", "favorit": false, "cds": [["Saturday Night (Radio Mix)", "Saturday Night (Nite Mix)", "Saturday Night (Beagle Mix)", "Saturday Night (Dida Mix)"]], "isMix": false}, {"row": 124, "artist": "Wonderwall", "title": "Witchcraft", "year": 2002, "genre": "Pop / Rock", "favorit": false, "cds": [["Witchcraft", "Big Bang", "Just More", "Jonny", "In April", "Feelin' Blue", "Together Again", "Never Wore a Gun Before", "A Little Long Time", "Sexy Girl", "Dear Lifetime", "Who Am I?"]], "isMix": false}, {"row": 125, "artist": "Wolfgang Petry", "title": "Nie Genug", "year": 1997, "genre": "Schlager", "favorit": true, "cds": [["Augen zu und durch", "Weiber", "Hab' noch lange nicht genug", "Weiß' der Geier", "Alles würd' ich tun für dich", "Bis irgendwann", "Es kommt sowieso ganz anders", "Millionär", "Das darf doch nicht wahr sein", "Der Sommer von damals", "Pass' gut auf dich auf", "Doch ich will dich", "Wieder zurück", "Dieses Lied ist für euch", "Ich schaff' das schon", "Du bist fort", "Wie beim ersten Mal", "Der \"Nie genug\" Hitmix"]], "isMix": false}, {"row": 126, "artist": "Van Halen", "title": "Best of Van Halen Vol. 1", "year": 1996, "genre": "Hard Rock", "favorit": false, "cds": [["Eruption", "Ain't Talkin' 'Bout Love", "Runnin' with the Devil", "Dance the Night Away", "And the Cradle Will Rock...", "Unchained", "Jump", "Panama", "Why Can't This Be Love", "Dreams", "When It's Love", "Poundcake", "Right Now", "Can't Stop Lovin' You", "Humans Being", "Can't Get This Stuff No More", "Me Wise Magic"]], "isMix": false}, {"row": 127, "artist": "VOLBEAT", "title": "Outlaw gentlemen & Shady Ladies", "year": 2013, "genre": "Rock / Metal", "favorit": false, "cds": [["Let's Shake Some Dust", "Pearl Hart", "The Nameless One", "Dead but Rising", "Cape of Our Hero", "Room 24", "The Hangman's Body Count", "My Body", "Lola Montez", "Black Bart", "Lonesome Rider", "The Sinner Is You", "Doc Holliday", "Our Loved Ones"]], "isMix": false}, {"row": 128, "artist": "VOLBEAT", "title": "Rewind Reply Rebound", "year": 2019, "genre": "Rock / Metal", "favorit": false, "cds": [["Last Day Under the Sun", "Pelvis on Fire", "Rewind the Exit", "Die to Live (feat. Neil Fallon)", "When We Were Kids", "Sorry Sack of Bones", "Cloud 9", "Cheapside Sloggers (feat. Gary Holt)", "Maybe I Believe", "Parasite", "Leviathan", "The Awakening of Bonnie Parker", "The Everlasting", "7:24"]], "isMix": false}, {"row": 129, "artist": "U2", "title": "The Joshua Tree", "year": 1987, "genre": "Rock", "favorit": false, "cds": [["Where the Streets Have No Name", "I Still Haven't Found What I'm Looking For", "With or Without You", "Bullet the Blue Sky", "Running to Stand Still", "Red Hill Mining Town", "In God's Country", "Trip Through Your Wires", "One Tree Hill", "Exit", "Mothers of the Disappeared"]], "isMix": false}, {"row": 130, "artist": "Udo Jürgens", "title": "Merci, Udo!", "year": 2017, "genre": "Schlager / Pop", "favorit": false, "cds": [["Ich War Noch Niemals In New York", "Griechischer Wein", "Mit 66 Jahren", "Aber Bitte Mit Sahne", "Ein Ehrenwertes Haus", "Vielen Dank Für Die Blumen (TV Version)", "Siebzehn Jahr, Blondes Haar (Original Version)", "Liebe Ohne Leiden (Duett Mit Jenny Jürgens)", "Merci Chérie (Original Version)", "Immer Wieder Geht Die Sonne Auf", "Der Teufel Hat Den Schnaps Gemacht", "Paris, Einfach Nur So Zum Spaß (Original Version)", "Mathilda (Album Version)", "Buenos Dias Argentina (Deutsch-Spanische Version)", "Ich Weiß, Was Ich Will (Original Maxi Version)", "Zeig Mir Den Platz An Der Sonne", "Heute Beginnt Der Rest Deines Lebens", "Alles Im Griff (Auf Dem Sinkenden Schiff)", "Der Mann Ist Das Problem", "Was Ich Dir Sagen Will"]], "isMix": false}, {"row": 131, "artist": "Texas", "title": "Southside", "year": 1989, "genre": "Pop-Rock", "favorit": false, "cds": [["I Don't Want a Lover", "Tell Me Why", "Everyday Now", "Southside", "Prayer for You", "Faith", "Thrill Has Gone", "Fight the Feeling", "Fool for Love", "One Choice", "Future Is Promises"]], "isMix": false}, {"row": 132, "artist": "Tom Jones", "title": "Greatest Hits", "year": 2003, "genre": "Pop", "favorit": false, "cds": [["Sexbomb (Tom Jones with Mousse T.)", "Kiss (Art of Noise feat. Tom Jones)", "It's Not Unusual", "Help Yourself", "What's New Pussycat", "Green, Green Grass of Home", "Detroit City", "Funny Familiar Forgotten Feelings", "I'll Never Fall in Love Again", "I'm Coming Home", "Love Me Tonight", "Without Love", "Daughter of Darkness", "The Young New Mexican Puppeteer", "A Boy from Nowhere", "Thunderball", "Till", "Delilah", "If I Only Knew", "Situation", "Burning Down the House (Tom Jones with The Cardigans)", "Mama Told Me Not to Come (Tom Jones with Stereophonics)", "Medley from \"The Full Monty\" (Robbie Williams and Tom Jones)"]], "isMix": false}, {"row": 133, "artist": "Die Toten Hosen", "title": "Reich & Sexy", "year": 1993, "genre": "Punk / Rock", "favorit": false, "cds": [["Hier kommt Alex", "Alles wird gut", "Alles aus Liebe", "Azzuro", "Halbstark", "Wünsch DIR was", "Carnival in Rio (Punk was)", "Mehr davon", "Liebesspieler", "Wort zum Sonntag", "Born to Lose", "Sascha ... ein aufrechter Deutscher", "1000 gute Gründe", "All die ganzen Jahre", "Liebeslied", "Opelgang", "Wir sind bereit", "Eisgekühlter Bommerlunder", "Hip Hop Bommi Bop", "Bis zum bitteren Ende"]], "isMix": false}, {"row": 134, "artist": "Toto", "title": "Past to present 1977-1990", "year": 1990, "genre": "Rock", "favorit": false, "cds": [["Love Has the Power", "Africa", "Hold the Line", "Out of Love", "Georgy Porgy", "I'll Be Over You", "Can You Hear What I'm Saying", "Rosanna", "I Won't Hold You Back", "Stop Loving You", "99", "Pamela", "Animal"]], "isMix": false}, {"row": 135, "artist": "Tracy Chapman", "title": "Collection", "year": 2001, "genre": "Rock / Folk", "favorit": false, "cds": [["Fast Car", "Subcity", "Baby Can I Hold You", "The Promise", "I'm Ready", "Crossroads", "Bang Bang Bang", "Telling Stories", "Smoke and Ashes", "Speak the Word", "Wedding Song", "Open Arms", "Give Me One Reason", "Talkin' 'bout a Revolution", "She's Got Her Ticket", "All That You Have Is Your Soul"]], "isMix": false}, {"row": 136, "artist": "Safri Duo", "title": "Greatest Hits", "year": 2010, "genre": "Dance", "favorit": false, "cds": [["Helele (feat. Velile Mchunu)", "All the People in the World", "Athena (feat. Soweto Gospel Choir)", "Samb-Adagio", "Rise (Leave Me Alone) (feat. Clark Anderson)", "Apollo", "Fallin' High", "Sweet Freedom", "Played-A-Live", "Twilight (feat. Rolando Villazón, Youssou N'Dour)", "Baya Baya", "Ritmo de la Noche", "Knock on Wood", "A Visit from the Zoo - Safri Duo Medley"]], "isMix": false}, {"row": 137, "artist": "Sash", "title": "Mysterious Times", "year": 1998, "genre": "Eurodance / Trance", "favorit": false, "cds": [["Mysterious Times (Radio Mix)", "Mysterious Times (Todd Terry's Radio Edit)", "Mysterious Times (Original Maxi)", "Mysterious Times (Cyrus & The Joker Meets Bossi Mix)", "Mysterious Times (John B. Norman Mix)", "Mysterious Times (Todd Terry's Club)"]], "isMix": false}, {"row": 138, "artist": "Sash", "title": "Just around the hill", "year": 2000, "genre": "Eurodance", "favorit": false, "cds": [["Just Around The Hill (Radio/Video Edit)", "Just Around The Hill (Unplugged Radio Edit)", "Just Around The Hill (Dance Radio Edit)", "Just Around The Hill (Doug Laurent 12\" Vocal Mix)", "Just Around The Hill (DJ Shah Remix)", "Just Around The Hill (Extended Dance Mix)", "Just Around The Hill (Extended Dance Radio Mix)"]], "isMix": false}, {"row": 139, "artist": "Scooter", "title": "Break it up", "year": 1996, "genre": "Hardcore Techno / Dance", "favorit": false, "cds": [["Break It Up", "Break It Up (Unplugged)", "Wednesday (Kontor Mix)"]], "isMix": false}, {"row": 140, "artist": "Shakira", "title": "Oral Fixation", "year": 2005, "genre": "Pop-Rock / Latin", "favorit": false, "cds": [["How Do You Do", "Don't Bother", "Illegal", "The Day and the Time", "Animal City", "Dreams for Plans", "Hey You", "Your Embrace", "Costume Makes the Clown", "Something", "Timor"]], "isMix": false}, {"row": 141, "artist": "Snow Patrol", "title": "Up to now", "year": 2009, "genre": "Rock", "favorit": false, "cds": [["Chocolate", "Chasing Cars", "Crack the Shutters", "Set the Fire to the Third Bar", "Crazy in Love", "Just Say Yes", "Batten Down the Hatch", "You're All I Have", "Hands Open", "Cartwheels", "The Planets Bend Between Us", "Ask Me How I Am", "On/Off", "Making Enemies", "Run (Mencap Little Noise Sessions, Live at the Union Chapel)"], ["Take Back the City", "Shut Your Eyes", "An Olive Grove Facing the Sea (2009 Version)", "Run", "Give Me Strength", "Signal Fire", "Spitting Games", "Open Your Eyes", "Dark Roman Wine", "Fifteen Minutes Old", "You Are My Joy", "The Golden Floor", "Starfighter Pilot", "PPP", "Chasing Cars (Mencap Little Noise Sessions, Live at the Union Chapel)"]], "isMix": false}, {"row": 142, "artist": "Snow Patrol", "title": "Fallen Empires", "year": 2011, "genre": "Rock / Pop", "favorit": false, "cds": [["I'll Never Let Go", "Called Out in the Dark", "The Weight of Love", "This Isn't Everything You Are", "The Garden Rules", "Fallen Empires", "Berlin", "Lifening", "New York", "In the End", "Those Distant Bells", "The Symphony", "The President", "Broken Bottles Form a Star (Prelude)"]], "isMix": false}, {"row": 143, "artist": "Status Quo", "title": "In the army now the collection", "year": 2002, "genre": "Rock", "favorit": false, "cds": [["In the Army Now", "Rockin' All Over the World", "Fun, Fun, Fun (with The Beach Boys)", "Whatever You Want", "The Wanderer", "Dreamin'", "Break the Rules", "Down Down", "Again and Again", "Old Time Rock 'n' Roll", "Hound Dog", "Roll Over Beethoven", "Anniversary Waltz - Part 1", "Anniversary Waltz - Part 2"]], "isMix": false}, {"row": 144, "artist": "Reamonn", "title": "Eleven", "year": 2010, "genre": "Pop-Rock", "favorit": false, "cds": [["Yesterday", "Colder", "Let the Morning Sleep", "Through the Eyes of a Child", "Million Miles", "Moments Like This", "Aeroplane", "Promise", "Tonight", "Serpentine", "The Only Ones", "Star", "Alright", "Strong", "Weep", "Life Is a Dream", "Supergirl", "Josephine", "Waiting There for You"]], "isMix": false}, {"row": 145, "artist": "R.E.M.", "title": "Out of Time", "year": 1991, "genre": "Alternative Rock", "favorit": false, "cds": [["Radio Song", "Losing My Religion", "Low", "Near Wild Heaven", "Endgame", "Shiny Happy People", "Belong", "Half a World Away", "Texarkana", "Country Feedback", "Me in Honey"]], "isMix": false}, {"row": 146, "artist": "R.E.M.", "title": "The Best of R.E.M.", "year": 1991, "genre": "Alternative Rock", "favorit": false, "cds": [["Carnival of Sorts (Boxcars)", "Radio Free Europe", "Perfect Circle", "Talk About the Passion", "So. Central Rain", "(Don't Go Back To) Rockville", "Pretty Persuasion", "Green Grow the Rushes", "Can't Get There from Here", "Driver 8", "Fall on Me", "I Believe", "Cuyahoga", "The One I Love", "Finest Worksong", "It's the End of the World as We Know It (And I Feel Fine)"]], "isMix": false}, {"row": 147, "artist": "Robbie Williams", "title": "Greatest Hits", "year": 2004, "genre": "Pop", "favorit": false, "cds": [["Old Before I Die", "Lazy Days", "Angels", "Let Me Entertain You", "Millennium (Radio Edit)", "No Regrets (Radio Edit)", "Strong (Radio Edit)", "She's the One", "Rock DJ", "Kids (with Kylie Minogue)", "Supreme", "Let Love Be Your Energy (Radio Edit)", "Eternity", "The Road to Mandalay (Radio Edit)", "Feel (Radio Edit)", "Come Undone (Radio Edit)", "Sexed Up (Radio Edit)", "Radio", "Misunderstood"]], "isMix": false}, {"row": 148, "artist": "Rod Stewart", "title": "The Story so far The Very Best of", "year": 2001, "genre": "Rock / Pop", "favorit": false, "cds": [["Maggie May", "Baby Jane", "Some Guys Have All the Luck", "Young Turks", "Da Ya Think I'm Sexy?", "What Am I Gonna Do (I'm So in Love with You)", "Hot Legs", "You Wear It Well", "Rhythm of My Heart", "Downtown Train", "The Motown Song", "This Old Heart of Mine (with Ronald Isley)", "Tonight I'm Yours", "Ooh La La", "I Can't Deny It", "It Takes Two (with Tina Turner)", "Stay with Me"], ["Sailing", "I Don't Want to Talk About It", "Have I Told You Lately", "The First Cut Is the Deepest", "You're in My Heart (The Final Acclaim)", "All for Love (with Bryan Adams & Sting)", "Tonight's the Night (Gonna Be Alright)", "Every Beat of My Heart", "Tom Traubert's Blues (Waltzing Matilda)", "Don't Come Around Here (with Helicopter Girl)", "The Killing of Georgie (Part I and II)", "Love Touch", "I Was Only Joking", "Ruby Tuesday", "In a Broken Dream", "Reason to Believe (Unplugged, with Ronnie Wood)", "In My Life"]], "isMix": false}, {"row": 149, "artist": "Ronan Keating", "title": "10 Years of Hits", "year": 2004, "genre": "Pop", "favorit": false, "cds": [["When You Say Nothing at All", "Life Is a Rollercoaster", "The Way You Make Me Feel (feat. Bryan Adams)", "Lovin' Each Day", "If Tomorrow Never Comes", "I Love It When We Do", "We've Got Tonight (feat. Lulu)", "The Long Goodbye", "Lost for Words", "She Believes (In Me)", "Last Thing on My Mind (feat. LeAnn Rimes)", "Father and Son (feat. Yusuf)", "Words", "Baby Can I Hold You", "I Hope You Dance", "Somebody Else"]], "isMix": false}, {"row": 150, "artist": "Roxette", "title": "The Ballad Hits", "year": 2002, "genre": "Pop / Rock", "favorit": false, "cds": [["A Thing About You", "It Must Have Been Love", "Listen to Your Heart", "Fading Like a Flower", "Spending My Time", "Queen of Rain", "Almost Unreal", "Crash! Boom! Bang!", "Vulnerable", "You Don't Understand Me", "Wish I Could Fly", "Anyone", "Salvation", "Milk and Toast and Honey", "Breathe", "The Weight of the World", "It Hurts"]], "isMix": false}, {"row": 151, "artist": "Queen", "title": "Greatest Hits", "year": 1994, "genre": "Rock", "favorit": false, "cds": [["Bohemian Rhapsody", "Another One Bites the Dust", "Killer Queen", "Fat Bottomed Girls", "Bicycle Race", "You're My Best Friend", "Don't Stop Me Now", "Save Me", "Crazy Little Thing Called Love", "Somebody to Love", "Now I'm Here", "Good Old-Fashioned Lover Boy", "Play the Game", "Flash", "Seven Seas of Rhye", "We Will Rock You", "We Are the Champions"], ["A Kind of Magic", "Under Pressure (with David Bowie)", "Radio Ga Ga", "I Want It All (single mix)", "I Want to Break Free (single mix)", "Innuendo", "It's a Hard Life", "Breakthru", "Who Wants to Live Forever", "Headlong", "The Miracle", "I'm Going Slightly Mad", "The Invisible Man", "Hammer to Fall (single mix)", "Friends Will Be Friends", "The Show Must Go On", "One Vision (single mix)"]], "isMix": false}, {"row": 152, "artist": "Bravo", "title": "The Hits 2018", "year": 2018, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Dynoro & Gigi D'Agostino - In My Mind", "Calvin Harris & Dua Lipa - One Kiss", "Rudimental feat. Jess Glynne, Macklemore & Dan Caplen - These Days", "DJ Snake feat. Selena Gomez, Ozuna & Cardi B - Taki Taki", "Clean Bandit feat. Demi Lovato - Solo", "El Profesor - Bella Ciao", "Jonas Blue feat. Jack & Jack - Rise", "David Guetta feat. Sia - Flames", "Marshmello & Anne-Marie - Friends", "Jax Jones feat. Ina Wroldsen - Breathe", "Dennis Lloyd - Nevermind", "Loud Luxury feat. Brando - Body", "Alle Farben & Kelvin Jones feat. Younotus - Only Thing We Know", "Felix Jaehn feat. R. City & Bori - Jennie", "Kendrick Lamar & The Weeknd - Pray for Me", "Namika - Je ne parle pas français", "Olexesh feat. Edin - Magisch", "Bausa - Was du Liebe nennst", "Dua Lipa & Blackpink - Kiss and Make Up", "Rita Ora - Anywhere", "Ramz - Barking", "Post Malone - Better Now", "Zedd & Elley Duhé - Happy Now", "Nico Santos - Rooftop"], ["Dean Lewis - Be Alright", "Benny Blanco, Halsey & Khalid - Eastside", "Marshmello & Bastille - Happier", "Imagine Dragons - Natural", "George Ezra - Shotgun", "Panic! at the Disco - High Hopes", "Maroon 5 feat. Cardi B - Girls Like You", "Shawn Mendes - In My Blood", "Sia - I'm Still Here", "Ed Sheeran - Perfect", "Rea Garvey feat. Kool Savas - Is It Love?", "Die Fantastischen Vier feat. Clueso - Zusammen", "Ariana Grande - No Tears Left to Cry", "G-Eazy & Halsey - Him & I", "Lukas Graham - Love Someone", "Herbert Grönemeyer - Sekundenglück", "Mark Forster - Einmal", "Wincent Weiss - An Wunder", "Helene Fischer - Flieger", "Álvaro Soler - La Cintura", "Nicky Jam & J Balvin - X", "Luis Fonsi & Demi Lovato - Échame la culpa", "Sean Paul & David Guetta feat. Becky G - Mad Love"]], "isMix": true}, {"row": 153, "artist": "Bravo", "title": "Hits 98", "year": 2017, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Imagine Dragons - Thunder", "George Ezra - Don't Matter Now", "Shawn Mendes - There's Nothing Holdin' Me Back", "Rita Ora - Your Song", "French Montana feat. Swae Lee - Unforgettable", "Cro - Unendlichkeit", "Mark Forster - Sowieso", "Capo feat. Nimo - Lambo Diablo GT", "Miley Cyrus - Malibu", "Lena - If I Wasn't Your Daughter", "Marlon Roudette - Ultra Love", "Selena Gomez - Bad Liar", "Lorde - Perfect Places", "Kendrick Lamar - Humble", "The Chainsmokers - Honest", "OneRepublic - No Vacancy", "Lola Marsh - Wishing Girl", "Michael Patrick Kelly - Golden Age", "Niall Horan - Slow Hands", "Die Toten Hosen - Wannsee", "Wincent Weiss - Nur ein Herzschlag entfernt", "Rag'n'Bone Man - As You Are", "Ed Sheeran - Galway Girl"], ["Robin Schulz feat. James Blunt - OK", "Jonas Blue feat. William Singe - Mama", "Liam Payne feat. Quavo - Strip That Down", "Axwell Λ Ingrosso - More Than You Know", "Micar - Burden Down", "Amanda feat. Sido - Blau", "Gentleman feat. Sean Paul - Ovaload", "Nimo - Heute mit mir", "Ufo361 - Nice Girl 2.0", "Felix Jaehn, Hight & Alex Aiono - Hot2Touch", "Disciples - On My Mind", "Alle Farben & Janieck - Little Hollywood", "Camila Cabello - Crying in the Club", "Jax Jones feat. Demi Lovato & Stefflon Don - Instruction", "Gestört aber GeiL feat. Lea - Wohin willst du", "Kygo & Ellie Goulding - First Time", "Martin Garrix & Troye Sivan - There for You", "Martin Solveig feat. Alma - All Stars", "David Guetta feat. Justin Bieber - 2U", "Madcon - Got a Little Drunk", "Clean Bandit feat. Zara Larsson - Symphony", "Helene Fischer - Herzbeben", "Milow & Sebastián Yatra - Summer Days"]], "isMix": true}, {"row": 154, "artist": "Bravo", "title": "Hits 97", "year": 2017, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Katy Perry feat. Skip Marley - Chained to the Rhythm", "Ed Sheeran - Castle on the Hill", "Alma - Chasing Highs", "Zedd & Alessia Cara - Stay", "Kygo & Selena Gomez - It Ain't Me", "Burak Yeter feat. Danelle Sandoval - Tuesday", "The Chainsmokers & Coldplay - Something Just like This", "Ofenbach - Be Mine", "Calvin Harris feat. Frank Ocean & Migos - Slide", "Jason Derulo feat. Nicki Minaj & Ty Dolla $ign - Swalla", "Axwell Λ Ingrosso feat. Kid Ink - I Love You", "Jamiroquai - Cloud 9", "Anstandslos & Durchgeknallt - Ohne dich", "The Magician & Julian Perretta - Tied Up", "Kato & Sigala feat. Hailee Steinfeld - Show You Love", "Anne-Marie - Ciao Adios", "Vice feat. Jasmine Thompson & Skizzy Mars - Steady 1234", "Flo Rida & 99 Percent - Cake", "DJ Katch feat. Hayley - Lights Out (Too Drunk)", "Ariana Grande feat. Future - Everyday", "Beginner feat. Samy Deluxe - Meine Posse", "Marteria feat. Teutilla - Aliens", "Future - Mask Off"], ["Luis Fonsi & Daddy Yankee - Despacito", "Álvaro Soler - Animal", "Maroon 5 feat. Future - Cold", "Lorde - Green Light", "Imagine Dragons - Believer", "Welshly Arms - Legendary", "AJR - Weak", "Jon Bellion - All Time Low", "JP Cooper - September Song", "Milky Chance - Blossom", "Sigrid - Don't Kill My Vibe", "Astrid S - Breathe", "The Weeknd feat. Daft Punk - I Feel It Coming", "Julia Michaels - Issues", "Marian Hill - Down", "Major Lazer feat. PartyNextDoor & Nicki Minaj - Run Up", "Bruno Mars - That's What I Like", "Linkin Park feat. Kiiara - Heavy", "James Blunt - Bartender", "Johannes Oerding - Kreise", "Clueso feat. Kat Frankie - Wenn du liebst", "Adel Tawil - Ist da jemand"]], "isMix": true}, {"row": 155, "artist": "Bravo", "title": "Hits 96", "year": 2017, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Sean Paul feat. Dua Lipa - No Lie", "Clean Bandit feat. Sean Paul & Anne-Marie - Rockabye", "Alan Walker - Alone", "Nevada feat. Mark Morrison & Fetty Wap - The Mack", "Martin Jensen - Solo Dance", "Alle Farben - Bad Ideas", "Robin Schulz & David Guetta feat. Cheat Codes - Shed a Light", "Starley - Call on Me", "Mahmut Orhan feat. Sena Şener - Feel", "Bakermat - Baby", "Maroon 5 - Don't Wanna Know", "Martin Solveig feat. Ina Wroldsen - Places", "Steve Aoki & Louis Tomlinson - Just Hold On", "Kungs feat. Ephemerals - I Feel So Bad", "Jax Jones feat. Raye - You Don't Know Me", "Penthox feat. Madcon & Julimar Santos - Cigarette", "Alok & Bruno Martini feat. Zeeba - Hear Me Now", "Rhodes vs. Felix Jaehn - Your Soul (Holding On)", "Milky Chance - Cocoon", "The Weeknd feat. Daft Punk - Starboy", "Mike Singer - Karma", "David Guetta & Cedric Gervais & Chris Willis - Would I Lie to You", "The Chainsmokers - Paris"], ["Sia - Never Give Up", "Kaleo - Way Down We Go", "Rag'n'Bone Man - Skin", "Maître Gims feat. Dany Synthé, Sofly & Nius - Loin (Pilule violette)", "Martin Garrix feat. Dua Lipa - Scared to Be Lonely", "Sage the Gemini - Now and Later", "Fitz and the Tantrums - HandClap", "SDP - So schön kaputt", "Shakira feat. Maluma - Chantaje", "Alice Merton - No Roots", "Rae Sremmurd feat. Gucci Mane - Black Beatles", "Max Giesinger - Wenn sie tanzt", "John Legend - Love Me Now", "OneRepublic - Let's Hurt Tonight", "Calum Scott - Dancing on My Own", "Yvonne Catterfeld feat. Bengio - Irgendwas", "Amy Macdonald - Dream On", "Bruno Mars - 24K Magic", "Luke Christopher - Lot to Learn", "Tim Bendzko - Leichtsinn", "Wincent Weiss - Feuerwerk", "Robbie Williams - Love My Life"]], "isMix": true}, {"row": 156, "artist": "Bravo", "title": "The Hits 2017", "year": 2017, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Ed Sheeran - Shape of You", "Luis Fonsi & Daddy Yankee - Despacito", "Post Malone feat. 21 Savage - Rockstar", "J Balvin & Willy William - Mi Gente", "Camila Cabello feat. Young Thug - Havana", "Avicii feat. Rita Ora - Lonely Together", "Justin Bieber & BloodPop - Friends", "French Montana feat. Swae Lee - Unforgettable", "DJ Khaled feat. Justin Bieber, Quavo, Chance the Rapper & Lil Wayne - I'm the One", "Alma & French Montana - Phases", "Lauv - I Like Me Better", "Alice Merton - No Roots", "Shawn Mendes - There's Nothing Holdin' Me Back", "Katy Perry feat. Skip Marley - Chained to the Rhythm", "Jonas Blue feat. William Singe - Mama", "Ofenbach - Be Mine", "Jax Jones feat. Raye - You Don't Know Me", "Jason Derulo feat. Nicki Minaj & Ty Dolla $ign - Swalla", "Clean Bandit feat. Sean Paul & Anne-Marie - Rockabye", "Robin Schulz feat. James Blunt - OK", "Helene Fischer - Achterbahn", "Axwell Λ Ingrosso - More Than You Know", "Felix Jaehn feat. Hearts & Colors & Adam Trigger - Like a Riddle"], ["Zayn feat. Sia - Dusk Till Dawn", "P!nk - What About Us", "Sam Smith - Too Good at Goodbyes", "Imagine Dragons - Thunder", "Calvin Harris feat. Pharrell Williams, Katy Perry & Big Sean - Feels", "DJ Snake feat. Lauv - A Different Way", "Kygo & Selena Gomez - It Ain't Me", "Zedd & Alessia Cara - Stay", "Martin Garrix feat. Dua Lipa - Scared to Be Lonely", "David Guetta feat. Justin Bieber - 2U", "Burak Yeter feat. Danelle Sandoval - Tuesday", "Rita Ora - Your Song", "Dua Lipa - New Rules", "Kay One feat. Pietro Lombardi - Señorita", "Maroon 5 feat. SZA - What Lovers Do", "Thirty Seconds to Mars - Walk on Water", "Adel Tawil - So schön anders", "Mark Forster - Kogong", "Kaleo - Way Down We Go", "Niall Horan - Too Much to Ask", "Harry Styles - Sign of the Times", "Linkin Park - One More Light"]], "isMix": true}, {"row": 157, "artist": "Chart Show", "title": "Die Erfolgreichsten Hits 2016", "year": 2016, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Imany - Don't Be So Shy", "Kungs vs. Cookin' on 3 Burners - This Girl", "Alan Walker - Faded", "Sia feat. Sean Paul - Cheap Thrills", "DJ Snake feat. Justin Bieber - Let Me Love You", "Shawn Mendes - Stitches", "Justin Bieber - Love Yourself", "The Chainsmokers feat. Daya - Don't Let Me Down", "Jonas Blue feat. Dakota - Fast Car", "Alle Farben feat. Younotus - Please Tell Rosie", "Mike Posner - I Took a Pill in Ibiza", "Felix Jaehn feat. Alma - Bonfire", "Milow - Howling at the Moon", "Álvaro Soler - Sofia", "X Ambassadors - Renegades", "OneRepublic - Wherever I Go", "The Strumbellas - Spirits", "Walking on Cars - Speeding Cars", "Dua Lipa - Be the One", "Major Lazer feat. Nyla & Fuse ODG - Light It Up", "Robin Schulz & J.U.D.G.E. - Show Me Love", "Lost Frequencies - What Is Love 2016", "Matt Simons - Catch & Release"], ["Stereoact feat. Kerstin Ott - Die immer lacht", "Eff - Stimme", "Mark Forster - Wir sind groß", "Lukas Graham - 7 Years", "Max Giesinger - 80 Millionen", "DNCE - Cake by the Ocean", "Prince Damien - Glücksmoment", "Kerstin Ott - Scheissmelodie", "Glasperlenspiel - Für immer", "Sarah Connor & Henning Wehland - Bonnie & Clyde", "Sportfreunde Stiller - Das Geschenk", "Philipp Poisel - Erkläre mir die Liebe", "Wincent Weiss - Musik sein", "Shawn Mendes - Treat You Better", "Katy Perry - Rise", "The BossHoss feat. The Common Linnets - Jolene", "LP - Lost on You", "Andreas Gabalier - Hulapalu", "257ers - Holz", "Bonez MC & RAF Camora feat. Maxwell - Ohne mein Team", "Clueso - Neuanfang", "Beginner - Es war einmal..."]], "isMix": true}, {"row": 158, "artist": "Bravo", "title": "Hits 90", "year": 2015, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["John Newman - Come and Get It", "The Weeknd - Can't Feel My Face", "Avicii - Waiting for Love", "Lost Frequencies feat. Janieck Devy - Reality", "Anna Naklab feat. Alle Farben & Younotus - Supergirl", "The Chemical Brothers feat. Q-Tip - Go", "Lunchmoney Lewis - Bills", "DJ Antoine feat. Akon - Holiday", "Afrojack feat. Mike Taylor - SummerThing!", "Jason Derulo - Want to Want Me", "Tinie Tempah feat. Jess Glynne - Not Letting Go", "David Guetta feat. Nicki Minaj, Bebe Rexha & Afrojack - Hey Mama", "M-22 - Good to Be Loved", "Sam Feldt feat. Kimberly Anne - Show Me Love", "Paul Kalkbrenner - Cloud Rider", "Jasmine Thompson - Adore", "Álvaro Soler - El mismo sol", "Pitbull feat. Chris Brown - Fun", "Rico Bernasconi & Tuklan feat. A-Class & Sean Paul - Ebony Eyes", "Deorro & Chris Brown - Five More Hours", "Leo Aberer - Everything Is Possible", "Deichkind - Selber machen lassen", "Maroon 5 - This Summer"], ["Cro - Bye Bye", "KC Rebell feat. Moé - Bist du real", "MoTrip feat. Lary - So wie du bist", "DJ Snake & AlunaGeorge - You Know You Like It", "Kid Ink feat. Dej Loaf - Be Real", "Fifth Harmony feat. Kid Ink - Worth It", "Natalie La Rose feat. Jeremih - Somebody", "Silentó - Watch Me (Whip / Nae Nae)", "Xov - Lucifer", "Jarryd James - Do You Remember", "Jessie J - Flashlight", "Sia - Fire Meet Gasoline", "Ed Sheeran - Photograph", "Lukas Graham - Mama Said", "Tove Lo - Talking Body", "Years & Years - Shine", "Kwabs - Fight for Love", "Walk the Moon - Shut Up and Dance", "Olly Murs - Never Been Better", "Meghan Trainor - Dear Future Husband", "Yvonne Catterfeld - Hey", "Andreas Bourani - Ultraleicht"]], "isMix": true}, {"row": 159, "artist": "Bravo", "title": "Hits 88", "year": 2015, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Mark Ronson feat. Bruno Mars - Uptown Funk", "Charli XCX - Break the Rules", "Calvin Harris feat. Ellie Goulding - Outside", "David Guetta feat. Sam Martin - Dangerous", "Avicii - The Nights", "The Avener feat. Rodriguez - Hate Street Dialogue", "Axwell Λ Ingrosso - Something New", "Clean Bandit feat. Jess Glynne - Real Love", "Kygo feat. Conrad - Firestone", "OMI - Cheerleader", "Pretty Pink & SDP - Ich muss immer an dich denken", "Lost Frequencies - Are You with Me", "Fritz Kalkbrenner - Void", "Broiler feat. Ravvel - Wild Eyes", "Blonde feat. Melissa Steel - I Loved You", "Philip George - Wish You Were Mine", "Oliver Heldens feat. KStewart - Last All Night (Koala)", "AronChupa - I'm an Albatraoz", "Deichkind - Denken Sie groß", "Meghan Trainor - Lips Are Movin", "Guy Sebastian feat. 2 Chainz - Mama Ain't Proud", "Fergie - L.A. Love (La La)"], ["Taylor Swift - Blank Space", "Echosmith - Cool Kids", "Chris Brown x Tyga - Ayo", "Kid Ink feat. Chris Brown - Hotel", "Mark Forster - Flash mich", "Philipp Dittberner & Marv - Wolke 4", "Ado Kojo feat. Shirin David - Du liebst mich nicht", "Ariana Grande feat. The Weeknd - Love Me Harder", "One Direction - Night Changes", "Selena Gomez - The Heart Wants What It Wants", "Josef Salvat - Diamonds", "James Bay - Hold Back the River", "Somekindawonderful - Reverse", "Beth Ditto & The Shoes - Cerrone's Supernature", "Tove Lo - Habits (Stay High)", "Sam Smith - I'm Not the Only One", "Rea Garvey - It's a Good Life", "George Ezra - Blame It on Me", "Sheppard - Let Me Down Easy", "Maroon 5 - Sugar", "James Blunt - When I Find Love Again", "Take That - These Days"]], "isMix": true}, {"row": 160, "artist": "Bravo", "title": "Hits 85", "year": 2014, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Clean Bandit feat. Jess Glynne - Rather Be", "Mr. Probz - Waves", "Katy Perry feat. Juicy J - Dark Horse", "Milky Chance - Down by the River", "Vance Joy - Riptide", "Pharrell Williams - Happy", "Kiesza - Hideaway", "Route 94 feat. Jess Glynne - My Love", "Duke Dumont feat. Jax Jones - I Got U", "Gorgon City feat. MNEK - Ready for Your Love", "Lily Allen - Air Balloon", "Parov Stelar - All Night", "The Chainsmokers - #Selfie", "David Guetta feat. Skylar Grey - Shot Me Down", "John Martin - Anywhere for You", "Kylie Minogue - Into the Blue", "Lady Gaga - G.U.Y.", "Sean Paul - Hey Baby", "Jason Derulo - Trumpets", "Trey Songz - Na Na", "Iggy Azalea feat. Charli XCX - Fancy", "Mateo - Isso"], ["Coldplay - Magic", "Nico & Vinz - Am I Wrong", "Sam Smith - Money on My Mind", "Elaiza - Is It Right", "Milow - We Must Be Crazy", "Aloe Blacc - The Man", "James Blunt - Heart to Heart", "London Grammar - Wasting My Young Years", "Birdy - Words as Weapons", "Bruno Mars - Young Girls", "Gary Barlow - Let Me Go", "Indila - Dernière danse", "Truls - Out of Yourself", "American Authors - Best Day of My Life", "Rea Garvey - Can't Say No", "5 Seconds of Summer - She Looks So Perfect", "Mando Diao - Black Saturday", "Anastacia - Stupid Little Things", "Adel Tawil - Weinen", "Glasperlenspiel - Moment", "Andreas Bourani - Auf uns", "Jan Delay - St. Pauli"]], "isMix": true}, {"row": 161, "artist": "Bravo", "title": "Hits 84", "year": 2014, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Lily Allen - Hard Out Here", "Macklemore & Ryan Lewis - White Walls (feat. ScHoolboy Q & Hollis)", "Lorde - Team", "One Direction - Story of My Life", "Avicii - Addicted to You", "Zedd feat. Hayley Williams - Stay the Night", "Ellie Goulding - Goodness Gracious", "Bastille - Of the Night", "Cris Cab - Liar Liar", "Lady Gaga feat. R. Kelly - Do What U Want", "Jason Derulo - Marry Me", "Left Boy - Security Check", "Fettes Brot - Für immer immer", "Flo Rida - How I Feel", "Afrojack feat. Spree Wilson - The Spark", "DVBBS & Borgeous - Tsunami", "Martin Solveig & Laidback Luke - Blow", "Tiësto - Red Lights", "Storm Queen - Look Right Through", "Bedouin Soundclash - Brutal Hearts", "Parra for Cuva feat. Anna Naklab - Wicked Games", "Faul & Wad Ad vs. Pnau - Changes"], ["Ed Sheeran - I See Fire", "Katy Perry - Unconditionally", "Imagine Dragons - Demons", "OneRepublic - Burning Bridges", "Söhne Mannheims - Großstadt", "Sido - Liebe", "Marteria - Kids (2 Finger an den Kopf)", "Max Herre - A-N-N-A (Immer wenn es regnet)", "Stromae - Formidable", "Anna F. - Too Far", "Drake - Worst Behavior", "Naughty Boy feat. Wiz Khalifa & Ella Eyre - Think About It", "Ozark Henry - I'm Your Sacrifice", "Rudimental feat. Emeli Sandé - Free", "Booka Shade feat. Fritz Kalkbrenner - Crossing Borders", "Blitzkids mvt. - My Delirium", "Tensnake feat. Nile Rodgers & Fiora - Love Sublime", "John Newman - Cheating", "Maxïmo Park - Leave This Island", "Sunrise Avenue - Little Bit Love", "Placebo - Loud Like Love"]], "isMix": true}, {"row": 162, "artist": "Chart Show", "title": "Die Erfolgreichsten Hits 2014", "year": 2014, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Helene Fischer - Atemlos durch die Nacht", "Andreas Bourani - Auf uns", "Unheilig - Zeit zu gehen", "Mark Forster feat. Sido - Au revoir", "The Avener - Fade Out Lines", "Mr. Probz - Waves", "Faul & Wad Ad feat. Pnau - Changes", "OneRepublic - Love Runs Out", "Maroon 5 - Maps", "Bastille - Of the Night", "Avicii - Addicted to You", "Kiesza - Hideaway", "Route 94 feat. Jess Glynne - My Love", "Sigma - Nobody to Love", "Katy Perry - Birthday", "Lily Allen - Hard Out Here", "Tove Lo - Habits (Stay High)", "Jessie J feat. Ariana Grande & Nicki Minaj - Bang Bang", "Pitbull feat. Ke$ha - Timber", "Jason Derulo - Wiggle", "Martin Tungevaag - Wicked Wonderland", "Calvin Harris - Summer"], ["Sheppard - Geronimo", "Marlon Roudette - When the Beat Drops Out", "James Blunt - Bonfire Heart", "Nico & Vinz - Am I Wrong", "Vance Joy - Riptide", "The Common Linnets - Calm After the Storm", "Sam Smith - Stay with Me", "Gregor Meyle - Keine ist wie du", "Milow - We Must Be Crazy", "Elaiza - Is It Right?", "Andreas Kümmert - Simple Man", "Coldplay - Magic", "Mando Diao - Black Saturday", "Ella Eyre - If I Go", "Ed Sheeran - Don't", "Cris Cab - Liar Liar", "Avicii - Hey Brother", "Cro - Traum", "Jan Delay - St. Pauli", "Conchita Wurst - Rise like a Phoenix", "Oonagh - Gäa", "Aneta Sablik - The One"]], "isMix": true}, {"row": 163, "artist": "Bravo", "title": "Hits 80", "year": 2013, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Olly Murs feat. Flo Rida - Troublemaker", "Icona Pop - I Love It", "Rihanna - Diamonds", "Alicia Keys - Girl on Fire", "Cro - Einmal um die Welt", "Sido - Bilder im Kopf", "Laing - Morgens immer müde", "Seeed - Augenbling", "Labrinth feat. Emeli Sandé - Beneath Your Beautiful", "Xavas - Wage es zu glauben", "Ke$ha - Die Young", "Flo Rida - I Cry", "Chris Brown - Don't Judge Me", "Rita Ora - How We Do (Party)", "Major Lazer - Get Free", "Feed Me & Crystal Fighters - Love Is All I Got", "DJane HouseKat - All the Time", "DJ Antoine - Bella Vita", "Calvin Harris feat. Florence Welch - Sweet Nothing", "Avicii vs. Nicky Romero - I Could Be the One", "Otto Knows - Million Voices", "Swedish House Mafia feat. John Martin - Don't You Worry Child"], ["The Script feat. will.i.am - Hall of Fame", "Ellie Goulding - Lights", "Birdy - People Help the People", "Imagine Dragons - It's Time", "Lenka - Everything at Once", "Mrs. Greenbird - Shooting Stars and Fairy Tales", "Blue - Hurt Lovers", "Bruno Mars - Locked Out of Heaven", "Leslie Clio - I Couldn't Care Less", "Jake Bugg - Two Fingers", "Gossip - Get a Job", "Max Herre feat. Cro - Fühlt sich wie fliegen an", "Carly Rae Jepsen - This Kiss", "Leona Lewis - Trouble", "Schmidt - Heart Shaped Gun", "fun. - Some Nights", "Rea Garvey - Wild Love", "Robbie Williams - Different", "Die Toten Hosen - Draußen vor der Tür", "Rammstein - Mein Herz brennt (Boys Noize Remix)"]], "isMix": true}, {"row": 164, "artist": "Bravo", "title": "Hits 77", "year": 2012, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Alex Clare - Too Close", "Madonna - Girl Gone Wild", "Katy Perry - Part of Me", "Nicki Minaj - Starships", "David Guetta feat. Nicki Minaj - Turn Me On", "Sean Paul - She Doesn't Mind", "K'naan feat. Nelly Furtado - Is Anybody Out There?", "Justin Bieber - Boyfriend", "Chris Brown - Turn Up the Music", "Taio Cruz - There She Goes", "Jason Derulo - Breathing", "Flo Rida feat. Sia - Wild Ones", "T-Pain feat. Ne-Yo - Turn All the Lights On", "Pitbull feat. Chris Brown - International Love", "Mike Candys feat. Evelyn & Patrick Miller - 2012 (If the World Would End)", "Cascada - Summer of Love", "Example - Kickstarts", "Deichkind - Leider geil", "Mia. - Fallschirm", "Kraftklub feat. Casper - Songs für Liam", "Stefanie Heinzmann - Diggin' in the Dirt", "Kelly Clarkson - Stronger (What Doesn't Kill You)"], ["Caligola - Forgive Forget", "Train - Drive By", "Gotye - Eyes Wide Open", "Of Monsters and Men - Little Talks", "The Overtones - Gambling Man", "Aura Dione feat. Rock Mafia - Friends", "Keane - Disconnected", "Florence + the Machine - No Light, No Light", "Foster the People - Call It What You Want", "Marlon Roudette - Hold On Me", "Bruno Mars - Count on Me", "Lana Del Rey - Blue Jeans", "Rebecca Ferguson - Nothing's Real but Love", "Birdy - Skinny Love", "Stanfour - Learning to Breathe", "Silbermond - Himmel auf", "Andreas Bourani - Wunder", "Unheilig - Lichter der Stadt", "Die Toten Hosen - Tage wie diese", "Udo Lindenberg feat. Jan Delay - Reeperbahn 2011 (What It's Like)", "Culcha Candela - Von allein"]], "isMix": true}, {"row": 165, "artist": "Bravo", "title": "Hits 76", "year": 2012, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Gotye feat. Kimbra - Somebody That I Used to Know", "Christina Perri - Jar of Hearts", "Adele - Someone like You", "Lana Del Rey - Born to Die", "P!nk - Bridge of Light", "Coldplay - Paradise", "James Morrison feat. Jessie J - Up", "Marlon Roudette - Anti Hero (Brave New World)", "Ed Sheeran - The A Team", "Amy Winehouse - Our Day Will Come", "Nickelback - Lullaby", "The Cranberries - Tomorrow", "Rea Garvey - Colour Me In", "Gypsy & The Cat - Time to Wonder", "Florence + the Machine - What the Water Gave Me", "Eisblume - Für immer", "Rosenstolz - Lied von den Vergessenen", "Udo Lindenberg feat. Clueso - Cello", "The BossHoss - Don't Gimme That"], ["Michel Teló - Ai Se Eu Te Pego", "Olly Murs feat. Rizzle Kicks - Heart Skips a Beat", "Flo Rida - Good Feeling", "Taio Cruz - Troublemaker", "LMFAO - Sexy and I Know It", "Culcha Candela - Wildes Ding", "David Guetta feat. Usher - Without You", "Lady Gaga - Marry the Night", "Katy Perry - The One That Got Away", "Bruno Mars - Marry You", "Jason Derulo - It Girl", "Jessie J - Domino", "Kelly Rowland feat. The WAV.s - Down for Whatever", "Melissa Perilli - My Wicked Heart", "Sido & B-Tight - Hol doch die Polizei", "Deichkind - Bück dich hoch", "Bag Raiders - Sunlight", "Example - Stay Awake", "Yolanda Be Cool feat. Crystal Waters - Le Bump", "Inna feat. Flo Rida - Club Rocker", "Timati & P. Diddy, DJ Antoine, Dirty Money - I'm on You", "Fedde le Grand - So Much Love"]], "isMix": true}, {"row": 166, "artist": "Bravo", "title": "The Hits 2012", "year": 2012, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Robbie Williams - Candy", "Carly Rae Jepsen - Call Me Maybe", "Olly Murs feat. Rizzle Kicks - Heart Skips a Beat", "Maroon 5 feat. Wiz Khalifa - Payphone", "David Guetta feat. Sia - She Wolf (Falling to Pieces)", "Lykke Li - I Follow Rivers", "Klangkarussell - Sonnentanz", "Asaf Avidan & The Mojos - One Day / Reckoning Song", "Lena - Stardust", "Loreen - Euphoria", "Michel Teló - Ai Se Eu Te Pego (Nossa Nossa)", "Gusttavo Lima - Balada (Tchê Tcherere Tchê Tchê)", "Tacabro - Tacatà", "Sean Paul - She Doesn't Mind", "Nelly Furtado - Waiting for the Night", "Madonna feat. Nicki Minaj & M.I.A. - Give Me All Your Luvin'", "Pitbull - Back in Time", "Chris Brown - Don't Wake Me Up", "Usher - Numb", "Flo Rida feat. Sia - Wild Ones", "Taio Cruz - Fast Car", "Psy - Gangnam Style"], ["P!nk - Try", "No Doubt - Settle Down", "Aura Dione feat. Rock Mafia - Friends", "Gotye feat. Kimbra - Somebody That I Used to Know", "Lana Del Rey - Summertime Sadness", "Emeli Sandé - Read All About It, Pt. III", "Miriam Bryant - Finders Keepers", "Lukas Graham - Drunk in the Morning", "fun. feat. Janelle Monáe - We Are Young", "Of Monsters and Men - Little Talks", "Train - Drive By", "Caligola - Forgive Forget", "Coldplay - Paradise", "Ed Sheeran - The A Team", "Christina Perri - Jar of Hearts", "Alex Clare - Too Close", "Deichkind - Leider geil (Leider geil)", "Cro - Easy", "Marteria, Yasha & Miss Platnum - Lila Wolken", "Die Toten Hosen - Tage wie diese"]], "isMix": true}, {"row": 167, "artist": "Chart Show", "title": "Die Erfolgreichsten Hits 2011", "year": 2011, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Jennifer Lopez feat. Pitbull - On the Floor", "Aura Dione - Geronimo", "Lady Gaga - Born This Way", "Maroon 5 feat. Christina Aguilera - Moves Like Jagger", "Pitbull feat. Ne-Yo, Afrojack & Nayer - Give Me Everything", "Rihanna - S&M", "Lucenzo feat. Don Omar - Danza Kuduro", "Alexandra Stan - Mr. Saxobeat", "Natalia Kills - Mirrors", "Jessie J feat. B.o.B - Price Tag", "Katy Perry - Firework", "The Black Eyed Peas - The Time (Dirty Bit)", "LMFAO - Party Rock Anthem", "Diddy-Dirty Money feat. Skylar Grey - Coming Home", "Flo Rida - Turn Around (5, 4, 3, 2, 1)", "Taio Cruz feat. Kylie Minogue - Higher", "Snoop Dogg vs. David Guetta - Sweat", "DJ Antoine vs. Timati feat. Kalenna - Welcome to St. Tropez", "R.I.O. feat. U-Jean - Turn This Club Around", "Martin Solveig & Dragonette - Hello", "Blue - I Can", "Pietro Lombardi - Call My Name"], ["Adele - Rolling in the Deep", "Bruno Mars - Grenade", "Marlon Roudette - New Age", "Brooke Fraser - Something in the Water", "Caro Emerald - A Night like This", "Tim Bendzko - Nur noch kurz die Welt retten", "Andreas Bourani - Nur in meinem Kopf", "Udo Lindenberg feat. Inga Humpe - Ein Herz kann man nicht reparieren", "Lena - Taken by a Stranger", "Unheilig - Winter", "Philipp Poisel - Eiserner Steg", "Israel Kamakawiwoʻole - Over the Rainbow", "Sarah Engels & Pietro Lombardi - I Miss You", "James Morrison - I Won't Let You Go", "Milow - You and Me (In My Pocket)", "Sunrise Avenue - Hollywood Hills", "Rosenstolz - Wir sind am Leben", "Glasperlenspiel - Echt", "Rea Garvey - Can't Stand the Silence", "Bag Raiders - Way Back Home", "Example - Changed the Way You Kiss Me", "Milk & Sugar vs. Vaya Con Dios - Hey (Nah Neh Nah)"]], "isMix": true}, {"row": 168, "artist": "Bravo", "title": "The Hits 2011", "year": 2011, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Aura Dione - Geronimo", "Maroon 5 feat. Christina Aguilera - Moves Like Jagger", "Rihanna feat. Calvin Harris - We Found Love", "Taio Cruz feat. Flo Rida - Hangover", "Jennifer Lopez & Pitbull - On the Floor", "Pitbull feat. Ne-Yo, Afrojack & Nayer - Give Me Everything", "Usher - More", "Chris Brown - Yeah 3x", "Snoop Dogg vs. David Guetta - Sweat", "LMFAO feat. Lauren Bennett & GoonRock - Party Rock Anthem", "The Black Eyed Peas - The Time (Dirty Bit)", "Lady Gaga - Born This Way", "Natalia Kills - Mirrors", "Lena - Taken by a Stranger", "Bag Raiders - Way Back Home", "Example - Changed the Way You Kiss Me", "Avicii - Levels", "Sak Noel - Loca People (What the F**k!)", "DJ Antoine vs. Timati feat. Kalenna - Welcome to St. Tropez", "Lucenzo feat. Don Omar - Danza Kuduro", "Alexandra Stan - Mr. Saxobeat", "Pietro Lombardi - Call My Name"], ["Lana Del Rey - Video Games", "Marlon Roudette - New Age", "Adele - Rolling in the Deep", "Bruno Mars - Grenade", "Caro Emerald - A Night like This", "Milow - You and Me (In My Pocket)", "Israel Kamakawiwoʻole - Over the Rainbow", "Hurts - Stay", "James Morrison - I Won't Let You Go", "Jessie J feat. B.o.B - Price Tag", "Nickelback - When We Stand Together", "Kelly Clarkson - Mr. Know It All", "Tim Bendzko - Nur noch kurz die Welt retten", "Andreas Bourani - Nur in meinem Kopf", "Glasperlenspiel - Echt", "Jupiter Jones - Still", "Foster the People - Pumped Up Kicks", "Sunrise Avenue - Hollywood Hills", "Katy Perry - E.T.", "Seeed - Molotov", "Diddy-Dirty Money feat. Skylar Grey - Coming Home", "Culcha Candela - Hungry Eyes"]], "isMix": true}, {"row": 169, "artist": "Bravo", "title": "Hits 71", "year": 2010, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["B.o.B feat. Hayley Williams - Airplanes", "Katy Perry - Teenage Dream", "Flo Rida feat. David Guetta - Club Can't Handle Me", "Taio Cruz - Dynamite", "Yolanda Be Cool & DCUP - We No Speak Americano", "Laserkraft 3D - Nein, Mann!", "Stromae - House'llelujah", "Sexion d'Assaut - Désolé", "Aloe Blacc - I Need a Dollar", "Plan B - She Said", "Ben l'Oncle Soul - Seven Nation Army", "Travie McCoy feat. Bruno Mars - Billionaire", "Jason Derulo - Ridin' Solo", "Ne-Yo - Beautiful Monster", "Kelly Rowland feat. David Guetta - Commander", "Culcha Candela - Move It", "Kylie Minogue - Get Outta My Way", "Edward Maya - This Is My Life", "Inna - Amazing", "Medina - Lonely", "Benny Benassi feat. Kelis, apl.de.ap & Jean-Baptiste - Spaceship"], ["Unheilig - Unter deiner Flagge", "Ich + Ich - Universum", "Juli - Elektrisches Gefühl", "Mike Posner - Cooler Than Me", "Cheryl Cole - Parachute", "The Wanted - All Time Low", "Lena - Touch a New Day", "Caro Emerald - Back It Up", "Maroon 5 - Misery", "Stanfour feat. Itchino Sound - Sail On", "30 Seconds to Mars - Closer to the Edge", "Amy Macdonald - This Pretty Face", "Aura Dione - Something from Nothing", "Reamonn - Yesterday", "Graziella Schazad - Take On Me", "Christina Stürmer - Wir leben den Moment", "Die Fantastischen Vier - Danke", "Patrice - Walking Alone", "Ke$ha - Take It Off", "Ace of Base - All for You", "Monrose - This Is Me"]], "isMix": true}, {"row": 170, "artist": "Bravo", "title": "The Hits 2009", "year": 2009, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Lady Gaga - Poker Face", "The Black Eyed Peas - Boom Boom Pow", "David Guetta feat. Kelly Rowland - When Love Takes Over", "Agnes - Release Me", "Gossip - Heavy Cross", "Pitbull - I Know You Want Me (Calle Ocho)", "Mando Diao - Dance with Somebody", "Katy Perry - Hot n Cold", "La Roux - Bulletproof", "Emilíana Torrini - Jungle Drum", "Charlie Winston - Like a Hobo", "Shakira - She Wolf", "The Killers - Human", "a-ha - Foot of the Mountain", "Cassandra Steen feat. Adel Tawil - Stadt", "Culcha Candela - Monsta", "Sugababes - Get Sexy", "Flo Rida feat. Ke$ha - Right Round", "Jan Delay - Oh Jonny", "Peter Fox - Haus am See", "Sido - Hey Du!", "The Jackson 5 - I'll Be There"], ["Ich + Ich - Pflaster", "OneRepublic - Secrets", "Marit Larsen - If a Song Could Get Me You", "Xavier Naidoo - Alles kann besser werden", "Beyoncé - Halo", "Razorlight - Wire to Wire", "Nelly Furtado - Manos al aire", "Laura Pausini & James Blunt - Primavera in anticipo (It Is My Song)", "Silbermond - Irgendwas bleibt", "Sportfreunde Stiller - Ein Kompliment", "Green Day - 21 Guns", "P!nk - Sober", "Milow - Ayo Technology", "Justin Bieber - One Less Lonely Girl", "Rihanna - Rehab", "James Morrison & Nelly Furtado - Broken Strings", "The All-American Rejects - Gives You Hell", "Metro Station - Shake It", "Tokio Hotel - Automatisch", "Frauenarzt & Manny Marc - Das geht ab (Wir feiern die ganze Nacht)", "Cascada - Evacuate the Dancefloor"]], "isMix": true}, {"row": 171, "artist": "Chart Show", "title": "Die erfolgreichsten Download-Hits aller Zeiten", "year": 2009, "genre": "Pop / Sampler", "favorit": false, "cds": [["Lady Gaga - Poker Face", "Mando Diao - Dance With Somebody", "Sugababes - Push The Button", "Rihanna - Don't Stop The Music", "Shakira feat. Wyclef Jean - Hips Don't Lie", "Nelly Furtado - Say It Right", "Gabriella Cilmi - Sweet About Me", "Duffy - Mercy", "Stefanie Heinzmann - My Man Is A Mean Man", "James Morrison feat. Nelly Furtado - Broken Strings", "Ich + Ich - Vom selben Stern", "Juli - Perfekte Welle", "Amy Macdonald - This Is The Life", "Maroon 5 - This Love", "Mika - Relax (Take It Easy)", "Bob Sinclar presents Goleo VI feat. Gary \"Nesta\" Pine - Love Generation", "Guru Josh Project - Infinity 2008", "The Disco Boys feat. Manfred Mann's Earth Band - For You", "Ida Corr vs. Fedde Le Grand - Let Me Think About It", "Alex C. feat. Y-ass - Du hast den schönsten Arsch der Welt", "O-Zone - Dragostea din teï"], ["Leona Lewis - Bleeding Love", "Milow - Ayo Technology", "Timbaland presents OneRepublic - Apologize", "James Blunt - 1973", "Ville Valo & Natalia Avelon - Summer Wine", "Razorlight - Wire To Wire", "Fergie - Big Girls Don't Cry", "Melanie C - First Day Of My Life", "Anastacia - Sick And Tired", "Eamon - F**k It (I Don't Want You Back)", "Söhne Mannheims - Und wenn ein Lied", "Xavier Naidoo - Dieser Weg", "Peter Fox - Haus am See", "Seeed - Ding", "Culcha Candela - Hamma!", "Fettes Brot - Emanuela", "Sportfreunde Stiller - '54, '74, '90, 2006", "Texas Lightning - No No Never", "DJ Ötzi & Nik P. - Ein Stern (... der deinen Namen trägt)", "Schnappi - Schnappi, das kleine Krokodil", "Joy - Twelve Little Stories"]], "isMix": true}, {"row": 172, "artist": "Die Hit Giganten", "title": "Apres Ski Hits", "year": 2008, "genre": "Après-Ski / Schlager (Sampler)", "favorit": false, "cds": [["DJ Ötzi - Hey Baby", "Nik P. - Ein Stern (der deinen Namen trägt)", "Michael Wendler - Sie liebt den DJ", "Geier Sturzflug - Pure Lust am Leben", "Wolfgang Ambros - Schifoan", "Rainhard Fendrich - Macho Macho", "Opus - Live Is Life", "Vollker Racho - Das rote Pferd", "Buddy - Ab auf die Piste", "Partynator - Party Mix I", "Dschinghis Khan - Moskau", "Nickerbocker & Biene - Hallo Klaus (I wui nur z'ruck)", "Edelweiss - Bring Me Edelweiss", "Hubert von Goisern & Die Alpinkatzen - Koa Hiatamadl", "Marianne Rosenberg - Er gehört zu mir", "Elvis Presley vs. JXL - A Little Less Conversation", "Haiducii - Dragostea din tei", "Scooter vs. Status Quo - Jump That Rock", "Die Kolibris - Die Hände zum Himmel", "De Randfichten - Lebt denn dr alte Holzmichl noch?"], ["Andrea Berg - Du hast mich tausendmal belogen", "Wolfgang Petry - Wahnsinn", "Donikkl - So a schöner Tag (Fliegerlied)", "Anton feat. DJ Ötzi - Anton aus Tirol", "Texas Lightning - No No Never", "Brings - Superjeilezick", "Drafi Deutscher - Marmor, Stein und Eisen bricht", "Roberto Blanco - Ein bisschen Spaß muss sein", "Peter Wackel - Ladioo", "Smokie - Living Next Door to Alice", "EAV - Küss die Hand, schöne Frau", "Peter Schilling - Major Tom (Völlig losgelöst)", "Right Said Fred - I'm Too Sexy", "Die Zipfelbuben - Kedeng Kedeng", "Oliver Lukas - Noch in hunderttausend Jahren", "Tim Toupet - Allee, Allee (Carnival de Paris)", "Matthias Reim - Verdammt, ich lieb' dich", "John Denver with Fat City - Take Me Home, Country Roads", "Udo Jürgens - Griechischer Wein", "Schürzenjäger - Sierra Madre"]], "isMix": true}, {"row": 173, "artist": "Bravo", "title": "The Hits 2008", "year": 2008, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Polarkreis 18 - Allein Allein", "Amy Macdonald - This Is the Life", "P!nk - So What", "Rihanna - Disturbia", "Duffy - Mercy", "Gabriella Cilmi - Sweet About Me", "Amy Winehouse - Back to Black", "Stefanie Heinzmann - The Unforgiven", "Yael Naim - New Soul", "A Fine Frenzy - Almost Lover", "Jason Mraz - I'm Yours", "Coldplay - Violet Hill", "Revolverheld - Helden 2008", "Thomas Godoj - Love Is You", "Söhne Mannheims - Das hat die Welt noch nicht gesehen", "Timbaland feat. OneRepublic - Apologize", "Maroon 5 - Won't Go Home Without You", "Ich + Ich - So soll es bleiben", "Rosenstolz - Gib mir Sonne", "Reamonn - Through the Eyes of a Child", "Paul Potts - Nessun dorma"], ["Madonna feat. Justin Timberlake & Timbaland - 4 Minutes", "Ne-Yo - Closer", "Leona Lewis - Bleeding Love", "Alicia Keys - No One", "Xavier Naidoo feat. Cassandra Steen - Wann (und ein Gedicht)", "Sarah Connor - I'll Kiss It Away", "Sugababes - Denial", "Jordin Sparks - Tattoo", "Snoop Dogg - Sensual Seduction", "Usher - Love in This Club", "Sido - Augen auf", "Peter Fox - Alles neu", "The Pussycat Dolls - When I Grow Up", "Madcon - Beggin'", "Britney Spears - Piece of Me", "Moby - Disco Lies", "Ida Corr vs. Fedde Le Grand - Let Me Think About It", "Guru Josh Project - Infinity 2008", "Shaggy feat. Trix & Flix - Feel the Rush", "Mark Medlock - Summer Love", "DJ Ötzi - Noch in 100.000 Jahren"]], "isMix": true}, {"row": 174, "artist": "Bravo", "title": "The Hits 2007", "year": 2007, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Sugababes - About You Now", "Nicole Scherzinger - Baby Love", "Gwen Stefani - The Sweet Escape", "Rihanna - Umbrella", "Kanye West - Stronger", "Justin Timberlake - LoveStoned / I Think She Knows", "Timbaland - Give It to Me", "Britney Spears - Gimme More", "Culcha Candela - Hamma!", "Sean Kingston - Beautiful Girls", "Nelly Furtado - All Good Things (Come to an End)", "Natasha Bedingfield - Soulmate", "Maroon 5 - Makes Me Wonder", "Take That - Rule the World", "Ich + Ich - Vom selben Stern", "Tokio Hotel - An deiner Seite", "Avril Lavigne - Hot", "Mika - Grace Kelly", "Rooney - When Did Your Heart Go Missing?", "Kaiser Chiefs - Ruby"], ["James Blunt - 1973", "Colbie Caillat - Bubbly", "Enrique Iglesias - Do You Know? (The Ping Pong Song)", "Ville Valo & Natalia Avelon - Summer Wine", "Christina Aguilera - Hurt", "Nevio - Amore per sempre", "P!nk - Dear Mr. President", "Fergie - Big Girls Don't Cry", "Mark Medlock - Now or Never", "Maria Mena - Just Hold Me", "Amy Winehouse - Rehab", "Azad feat. Adel Tawil - Prison Break Anthem (Ich glaub' an dich)", "Akon - I Wanna Love You", "Jennifer Lopez - Qué hiciste", "David Bisbal - Silencio", "Marquess - Vayamos compañeros", "Monrose - Hot Summer", "Eric Prydz - Proper Education", "Alex C. feat. Y-Ass - Du hast den schönsten Arsch der Welt", "Nena, Olli & Remmler - Ich kann nix dafür", "DJ Ötzi & Nik P. - Ein Stern (der deinen Namen trägt)"]], "isMix": true}, {"row": 175, "artist": "Bravo", "title": "The Hits 2006", "year": 2006, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Silbermond - Das Beste", "Scissor Sisters - I Don't Feel Like Dancin'", "US5 - In the Club", "Sandi Thom - I Wish I Was a Punk Rocker (With Flowers in My Hair)", "Juli - Dieses Leben", "Sunrise Avenue - Fairytale Gone Bad", "Eros Ramazzotti & Anastacia - I Belong to You (Il ritmo della passione)", "Kelly Clarkson - Because of You", "Rosenstolz - Ich bin ich (Wir sind wir)", "James Morrison - You Give Me Something", "Reamonn - Tonight", "Ronan Keating - Iris", "Depeche Mode - Suffer Well", "Tobias Regner - I Still Burn", "Yvonne Catterfeld - Erinner mich, dich zu vergessen", "Killerpilze - Richtig Scheiße (Auf 'ne schöne Art und Weise)", "LaFee - Prinzesschen", "Oomph! - Gott ist ein Popstar", "Lordi - Hard Rock Hallelujah", "Tokio Hotel - Rette mich", "Texas Lightning - No No Never"], ["Shakira feat. Wyclef Jean - Hips Don't Lie", "Rihanna - SOS", "The Pussycat Dolls feat. Snoop Dogg - Buttons", "Christina Aguilera - Ain't No Other Man", "P!nk - Stupid Girls", "Nelly Furtado - Maneater", "Justin Timberlake - SexyBack", "Beyoncé - Check on It", "The Black Eyed Peas - Pump It", "Chris Brown - Run It!", "Flipsyde - Happy Birthday", "Sérgio Mendes feat. The Black Eyed Peas - Mas que nada", "Sean Paul - Temperature", "Goleo VI & Atomic Kitten - All Together Now (Strong Together)", "Marquess - El Temperamento", "Seeed - Ding", "Bob Sinclar pres. Goleo VI - Love Generation", "Herbert Grönemeyer feat. Amadou & Mariam - Zeit, dass sich was dreht", "Sportfreunde Stiller - '54, '74, '90, 2006", "Xavier Naidoo - Danke"]], "isMix": true}, {"row": 176, "artist": "Bravo", "title": "The Hits 2005", "year": 2005, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Melanie C - First Day of My Life", "Sugababes - Push the Button", "US5 - Just Because of You", "The Pussycat Dolls feat. Busta Rhymes - Don't Cha", "Sean Paul - We Be Burnin' (Recognize It)", "The Black Eyed Peas - Don't Phunk with My Heart", "Jennifer Lopez - Get Right", "Gwen Stefani - Hollaback Girl", "Will Smith - Switch", "Ciara feat. Missy Elliott - 1, 2 Step", "Rihanna - Pon de Replay", "Juanes - La camisa negra", "The Chemical Brothers - Galvanize", "K-Maro - Femme Like U", "Muhabbet - Sie liegt in meinen Armen", "Seeed feat. Cee-Lo Green - Aufstehn!", "Fettes Brot - Emanuela", "Bushido - Endgegner", "Schiller mit Thomas D - Die Nacht... du bist nicht allein", "Kelly Clarkson - Behind These Hazel Eyes", "Rammstein - Benzin"], ["Mariah Carey - We Belong Together", "Christina Stürmer - Mama (Ana Ahabak)", "Ich + Ich - Du erinnerst mich an Liebe", "t.A.T.u. - All About Us", "Xavier Naidoo - Dieser Weg", "Tokio Hotel - Durch den Monsun", "Marc Terenzi - Love to Be Loved by You (The Wedding Song)", "Backstreet Boys - Incomplete", "Joana Zimmer - I Believe", "Mario - Let Me Love You", "2Pac - Ghetto Gospel", "Nelly feat. Tim McGraw - Over and Over", "Phantom Planet - California", "Gorillaz - Feel Good Inc.", "Wir sind Helden - Nur ein Wort", "Juli - November", "Nena - Liebe ist", "a-ha - Celice", "Simply Red - Perfect Love", "Jeanette - Bad Girls Club", "Sarah Connor - From Zero to Hero"]], "isMix": true}, {"row": 177, "artist": "Bravo", "title": "The Hits 2004", "year": 2004, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Natasha Bedingfield - These Words (I Love You, I Love You)", "Silbermond - Symphonie", "Aventura - Obsesión", "JoJo feat. Bow Wow - Baby It's You", "Count Basic - Don't Speak So Sweet to Me", "Kevin Lyttle - Turn Me On", "Baby Bash - Suga Suga", "Yvonne Catterfeld - Sag mir - Was meinst du?", "Die Fantastischen Vier - Sommerregen", "Stefan Raab feat. Spucky, Kork & Schrotty - Space-Taxi", "Max Mutzke - Can't Wait Until Tonight", "Sarah Connor feat. Natural - Just One Last Dance", "Alexander Klaws - Here I Am", "Patrick Dewayne - Alles was bleibt", "Jeanette - Tellin' You Goodbye", "Rosenstolz - Liebe ist alles", "Vanilla Ninja - Tough Enough", "Groove Coverage - Runaway", "Danzel - Pump It Up", "O-Zone - Dragostea din tei", "Eric Prydz - Call on Me"], ["Eamon - F**k It (I Don't Want You Back)", "Usher - Burn", "Nelly - My Place", "The Black Eyed Peas - Shut Up", "OutKast - Hey Ya!", "The 411 - Dumb", "Anastacia - Left Outside Alone", "Britney Spears feat. Madonna - Me Against the Music", "Maroon 5 - This Love", "Avril Lavigne - Don't Tell Me", "Bryan Adams - Open Road", "Nelly Furtado - Powerless (Say What You Want)", "Michael Andrews feat. Gary Jules - Mad World", "Christina Stürmer - Bus durch London", "Nightwish - Nemo", "Rammstein - Mein Teil", "Oomph! - Augen auf!", "Die Toten Hosen - Walkampf", "Within Temptation - Stand My Ground", "Juli - Geile Zeit"]], "isMix": true}, {"row": 178, "artist": "Die Hit Giganten", "title": "Disco Hits", "year": 2004, "genre": "Disco (Sampler)", "favorit": false, "cds": [["Boney M. - Daddy Cool", "Gibson Brothers - Que sera mi vida", "Ottawan - D.I.S.C.O.", "Village People - Y.M.C.A.", "Chic - Le Freak", "Tina Charles - I Love to Love", "Blondie - Heart of Glass", "Amii Stewart - Knock on Wood", "The Trammps - Disco Inferno", "Gloria Gaynor - I Will Survive", "Baccara - Yes Sir, I Can Boogie", "Imagination - Just an Illusion", "Hot Chocolate - You Sexy Thing", "Kool & The Gang - Celebration", "Chaka Khan - I'm Every Woman", "Sister Sledge - We Are Family", "Evelyn Thomas - High Energy", "Penny McLean - Lady Bump", "Eruption - I Can't Stand the Rain", "MFSB feat. The Three Degrees - T.S.O.P. (The Sound of Philadelphia)"], ["Patrick Hernandez - Born to Be Alive", "Dan Hartman - Relight My Fire", "The Jacksons - Blame It on the Boogie", "Sylvester - You Make Me Feel (Mighty Real)", "Irene Cara - Flashdance... What a Feeling", "Rockwell - Somebody's Watching Me", "Michael Sembello - Maniac", "Yvonne Elliman - If I Can't Have You", "Barry White - Let the Music Play", "Earth, Wind & Fire - Boogie Wonderland", "KC and the Sunshine Band - That's the Way (I Like It)", "Rose Royce - Car Wash", "Lipps Inc. - Funkytown", "5000 Volts - I'm on Fire", "George McCrae - Rock Your Baby", "Silver Convention - Fly, Robin, Fly", "Donna Summer - I Feel Love", "LaBelle - Lady Marmalade", "The Whispers - And the Beat Goes On", "Van McCoy - The Hustle"]], "isMix": true}, {"row": 179, "artist": "Viva", "title": "Hits 16", "year": 2002, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Xavier Naidoo - Wo willst du hin?", "Anastacia - Paid My Dues", "Afroman - Crazy Rap", "Bro'Sis - I Believe", "Jennifer Lopez - I'm Real", "Westlife - World of Our Own", "Riva feat. Dannii Minogue - Who Do You Love Now?", "Blank & Jones - Desire", "Green Velvet - La La Land", "Jeanette - No More Tears", "Starsplash - Free", "Rocco - Everybody", "Ravers on Dope - Hardcore Vibes", "Scooter - Ramp! (The Logical Song)", "ATB - Hold You", "Cosmic Gate - Back to Earth", "DJ Tomcraft - Overdose", "HIM - Heartache Every Moment", "Such a Surge - Koma 2002", "Die Toten Hosen - Kein Alkohol (ist auch keine Lösung)"], ["Nickelback - How You Remind Me", "Depeche Mode - Goodnight Lovers", "Kate Winslet - What If", "Robbie Williams & Nicole Kidman - Somethin' Stupid", "Vanessa Amorosi - Everytime I Close My Eyes", "No Angels - Atlantis 2002", "Normal Generation - Hold On", "4 Clubbers - Children", "Jan Wayne meets Lena - Total Eclipse of the Heart", "Beam vs. Cyrus - Lifestyle", "Storm - We Love", "E-Nomine - Wolfen (Das Tier in mir)", "Blue - If You Come Back", "Bro'Sis - Do You (Acoustic Version)", "Inessa feat. Dante Thomas - Guilty", "Shaquille O'Neal feat. DJ Tomekk - How You Like That (Ja, ja, ja)", "blink-182 - Stay Together for the Kids", "Sasha - Turn It into Something Special", "Samajona - Wird es heute passieren?", "Mis-Teeq - One Night Stand"]], "isMix": true}, {"row": 180, "artist": "Boom", "title": "Booom 2001 - The First", "year": 2000, "genre": "Pop / Dance Sampler", "favorit": false, "cds": [["Christian - Es ist geil ein Arschloch zu sein", "Jeanette - Go Back", "Rednex - The Spirit Of The Hawk", "ATC - My Heart Beats Like A Drum (Dam Dam Dam)", "a-ha - Velvet", "Berger - Zeig mir dein Gesicht", "Christina Aguilera - Come On Over Baby (All I Want Is You)", "HIM - Gone With The Sin", "Sub7even - Weatherman", "Westlife - My Love", "Elwood - Sundown", "Tic Tac Toe - Heute ist morgen schon gestern", "Antonia feat. Sandra - Knallrotes Gummiboot", "Heinz - Lieb im Prinzip", "Toni Braxton - Spanish Guitar", "Sebastian Deyle - Melody Of Life", "Rosenstolz - Kinder der Nacht", "Bryton - Ooh The Way I Feel About You", "Fusion - Toy Soldier", "Rüdiger Hoffmann - Das Marmeladenglas"], ["Gigi D'Agostino - La Passion", "Delerium - Silence", "Sonique - Sky", "Darude - Feel The Beat", "Sven Väth - L'Esperanza", "3 Phase feat. Dr. Motte - Klang der Familie", "Mabel - Bum Bum", "Mr. X & Mr. Y - Global Players (My Name Is Techno)", "Green Court feat. De/Vision - Shining", "Marc van Linden - Clubbiemus", "Temporé - Infinity In Your Hand", "Simon Key - Check The Beat", "Kaylab - Here We Go", "Worthy Davis - Night To Remember", "Juan Lopez - Chica", "Cojo - Jungle Sound", "50:50 - Where's The Party At", "Seeed - Tide Is High", "Eric Singleton vs. Shaggy - Sexy Girl", "Hape Kerkeling - Vor der Disco & Discotürsteher"]], "isMix": true}, {"row": 181, "artist": "Just The Best", "title": "1/2001", "year": 2001, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Christian - Es ist geil, ein Arschloch zu sein", "Baha Men - Who Let the Dogs Out", "DJ Tomekk feat. KRS-One, Torch & MC Rene - Return of Hip Hop", "Robbie Williams - Supreme", "Brooklyn Bounce - Bass, Beats & Melody", "Backstreet Boys - Shape of My Heart", "Slut - It Was Easier", "LeAnn Rimes - Can't Fight the Moonlight", "*NSYNC - This I Promise You", "R. Kelly - I Wish", "DJ Red 5 vs. DJs @ Work - Rhythm & Drums 2001", "Melissa - Bulletproof", "Sasha - Owner of My Heart", "Siesto - Everytime I Hear", "Craig David - Walking Away", "Eric Singleton vs. Shaggy - Sexy Girl", "Samir feat. Ju - Tut gut", "A.T.C. - Thinking of You", "Gigi D'Agostino - La Passion", "DJ Ötzi - Hey Baby"], ["Walter - Ich geh' nicht ohne dich", "Britney Spears - Stronger", "Jeanette - Go Back", "Melanie Thornton - Love How You Love Me", "Rednex - Hold Me for a While", "Die 3. Generation - Ich will, dass du mich liebst", "Paul van Dyk - We Are Alive", "Guano Apes - Dödel Up", "Balloon - Monstersound", "Mauro Picotto - Proximus", "Blank & Jones - Beyond Time", "HIM - Gone with the Sin", "Commercial Breakup - Walking Back Home", "Reamonn - Waiting There for You", "Prezident Brown - Rough Road", "Melanie C - If That Were Me", "Amadeus Barthoni - Emporio", "Babyboy - Baby Superstar", "Zlatko - Pack die Koffer", "Jürgen - Herz geballt"]], "isMix": true}, {"row": 182, "artist": "Rock Christmas", "title": "The Very Best Of", "year": 2000, "genre": "Rock / Weihnachten (Sampler)", "favorit": false, "cds": [["Queen - Thank God It's Christmas", "Bryan Adams - Christmas Time", "The Plastic Ono Band - Happy X-Mas (War Is Over)", "Band Aid - Do They Know It's Christmas?", "Wham! - Last Christmas", "Chris Rea - Driving Home for Christmas", "Samantha Mumba - All I Want for Christmas", "Ronan Keating feat. Moira Brennan - Fairytale of New York", "Paul McCartney - Wonderful Christmastime", "Orange Blue feat. Vail - Why Do They Feel So Sad on Christmas?", "98° - This Gift", "S Club 7 - Perfect Christmas", "Luther Vandross - Have Yourself a Merry Little Christmas", "All-4-One - Frosty the Snowman / Rudolph the Red-Nosed Reindeer", "Boyz II Men - Silent Night", "David Pomeranz - Christmas Is the Time of the Year", "ChildLiners - The Gift of Christmas", "Loona - Navidad (Christmas)", "*NSYNC - Merry Christmas, Happy Holidays", "A*Teens - Happy New Year"], ["Bing Crosby - White Christmas", "Loona - Hijo de la luna", "R. Kelly - Religious Love", "Frankie Goes to Hollywood - The Power of Love", "Mahalia Jackson - Silent Night, Holy Night", "Doris Day - Winter Wonderland", "New Kids on the Block - Little Drummer Boy", "Ella Fitzgerald - Rudolph, the Red-Nosed Reindeer", "David Pomeranz - Christmas Star", "Vanessa Williams & Bobby Caldwell - Baby, It's Cold Outside", "Cliff Richard - Mistletoe and Wine", "Shakin' Stevens - Merry Christmas Everyone", "Mud - Lonely This Christmas", "David Essex - A Winter's Tale", "Mel & Kim - Rockin' Around the Christmas Tree", "Slade - Merry Xmas Everybody", "Lynyrd Skynyrd - Christmas Time Again", "Elton John - Step into Christmas", "Prince & The Revolution - Another Lonely Christmas", "Blink-182 - I Won't Be Home for Christmas"]], "isMix": true}, {"row": 183, "artist": "Just the Best", "title": "2/2000", "year": 2000, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Manu Chao - Bongo Bong", "Anton feat. DJ Ötzi - Anton aus Tirol", "Vengaboys - Shalala Lala", "Prezioso feat. Marvin - Let Me Stay", "Sabrina Setlur feat. Xavier Naidoo - Alles", "Thomas D - Liebesbrief", "Westlife - Fool Again", "Oli.P - Plötzlich stand sie da", "Stefan Raab - Wadde hadde dudde da?", "Reamonn - Supergirl", "H-Blockx vs. Dr. Ring-Ding - Ring of Fire", "Such a Surge - Silver Surger", "Geri Halliwell - Bag It Up", "Jack Radics - That's Life", "Enigma - Push the Limits", "Peter Maffay - Bis ans Ende der Welt", "Tyrone - Ayleen", "Backstreet Boys - Show Me the Meaning of Being Lonely", "Ayman feat. Dean - Mein Stern", "*NSYNC - Bye Bye Bye"], ["Guano Apes - Big in Japan", "Die Toten Hosen - Bayern", "HIM - Right Here in My Arms", "Moby - Natural Blues", "Gigi D'Agostino - Bla Bla Bla", "Kosmonova - Danse avec moi!", "Hypetraxx - The Darkside", "U96 - Das Boot 2001", "Paffendorf - Where Are You", "Members of Mayday - Datapop", "Mabel - Disco-Disco", "Tom Novy feat. Lima - Now or Never", "Dynamite Deluxe - Ladies & Gentlemen", "Steps - Say You'll Be Mine", "Passion Fruit - Wonderland", "Loona - La vida (Es una flor)", "Eiffel 65 - Too Much of Heaven", "Aqua - Cartoon Heroes", "French Affair - Do What You Like", "A*Teens - Gimme! Gimme! Gimme! (A Man After Midnight)"]], "isMix": true}, {"row": 184, "artist": "Fetenhits", "title": "die deutsche 2", "year": 1999, "genre": "Deutsche Hits / Party (Sampler)", "favorit": false, "cds": [["Nena - Leuchtturm", "Die Schröders - Laß uns schmutzig Liebe machen", "Wolfgang Petry - Ruhrgebiet", "Costa Cordalis - Viva la noche '97", "Pur & Das beste Publikum der Welt - Partyhitmix (Party Mix I - Von uns für euch)", "Olaf Henning - Ich bin nicht mehr dein Clown", "Höhner - Die Karawane zieht weiter ... Dä Sultan hät Doosch", "Münchener Freiheit - Ohne dich (schlaf' ich heut Nacht nicht ein)", "Puhdys - Alt wie ein Baum '99", "Schweizer - 13 Tage", "Dieter Thomas Kuhn & Band - Eine neue Liebe ist wie ein neues Leben", "Creme 21 - Wann wird's mal wieder richtig Sommer?", "Lord Ulli - Wir haben ein Idol (Harald Juhnke)", "Nickerbocker & Biene - Hallo Klaus (I wui nur z'ruck)", "Die Alpenrammler - Alles wunderbar", "Guildo Horn & Die Orthopädischen Strümpfe - Guildo hat euch lieb!", "Oliver Frank - Italienische Sehnsucht", "Extrabreit & Harald Juhnke - Nichts ist für immer", "City - Am Fenster"], ["Udo Jürgens - Paris, einfach so nur zum Spaß", "Till & Obel - Scheißegal", "Illegal 2001 - Dosenbier", "J.B.O. - Bolle", "Die Schröders - Saufen", "Achim Reichel - Kuddel Daddel Du", "Udo Lindenberg - Reeperbahn", "Jürgen Drews - Alles was ich will", "Matthias Reim - Verdammt, ich lieb' dich", "Zillertaler Schürzenjäger - Zillertaler Hochzeitsmarsch", "Die 3 Besoffskis - Olé, wir fahr'n in P... nach Barcelona", "Vossi - Einer geht noch rein", "STS - Fürstenfeld", "Superboys - Ich wünscht' du wärst bei mir (Spirit of Air)", "Paola - Peter Pan", "Stefan Waggershausen - Hallo Engel", "Fred Sonnenschein & seine Freunde - Alles Gute zum Geburtstag", "Orchester Eric Frantzen und Solisten - Wer hat an der Uhr gedreht", "Olaf Henning - Blinder Passagier"]], "isMix": true}, {"row": 185, "artist": "Top 99", "title": "Die Besten Hits des Jahres", "year": 1999, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Oli.P - So bist du", "Lou Bega - Mambo No. 5 (A Little Bit of...)", "Jennifer Lopez - If You Had My Love", "Ricky Martin - Livin' la vida loca", "George Michael - Outside", "TQ - Westside", "Puff Daddy feat. Hurricane G - P.E. 2000", "Xavier Naidoo - Sie sieht mich nicht", "Andru Donalds - All Out of Love", "Tarkan - Simarik", "Blondie - Maria", "Liquido - Narcotic", "Shanks & Bigfoot - Sweet Like Chocolate", "Tone Loc meets Z.Z. Bros - Funky Cold Medina 'Y2K", "Cha Cha - New Millennium (What Cha Wanna Do)", "Lauryn Hill - Ex-Factor", "Jamiroquai - Canned Heat", "Die Fantastischen Vier - MfG (Mit freundlichen Grüßen)", "Will Smith - Miami", "Eurythmics - I Saved the World Today"], ["Eiffel 65 - Blue (Da Ba Dee)", "DJ Tomekk vs. Grandmaster Flash feat. Afrob, Flavor Flav & MC Rene - 1, 2, 3... Rhymes Galore", "Die Allianz - Boys", "Britney Spears - ...Baby One More Time", "Backstreet Boys - I Want It That Way", "Echt - Du trägst keine Liebe in dir", "Sasha - We Can Leave the World", "Sara @ Tic Tac Two - Nie wieder", "Ann Lee - 2 Times", "Wamdue Project - King of My Castle", "Mellow Trax - Outa Space", "Passion Fruit - The Rigga-Ding-Dong-Song", "Vengaboys - We're Going to Ibiza", "Boney M. - Ma Baker", "Touché - This Goodbye Is Not Forever", "Bell Book & Candle - Fire and Run", "Modern Talking - You Are Not Alone", "Martay feat. ZZ Top - Gimme All Your Lovin' 2000", "Sabrina Setlur - Ich leb' für dich", "Chris - You"]], "isMix": true}, {"row": 186, "artist": "Bravo", "title": "Hits 25", "year": 1999, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Mr. Oizo - Flat Beat", "Die Fantastischen Vier - MFG (Mit freundlichen Grüßen)", "Britney Spears - ...Baby One More Time", "Tarkan - Simarik", "Blondie - Maria", "Loona - Donde vas", "Emilia - Good Sign", "Blue Nature - A Life So Changed", "Blümchen - Heut' ist mein Tag", "Benjamin Boyce - Change", "Cher - Strong Enough", "Faithless feat. Sabrina Setlur - Bring My Family Back", "Jason Nevins vs. Cypress Hill - Insane in the Brain", "Absolute Beginner - Hammerhart", "2-4 Family - Take Me Home", "Judith - We Gonna Stay Together", "Mr. X & Mr. Y - New World Order", "Piet Blank & Jaspa Jones - Cream", "Members of Mayday - Soundtropolis", "Warmduscher - Auf die Fresse"], ["Xavier Naidoo - Sie sieht mich nicht", "Sasha - We Can Leave the World", "Sara @ Tic Tac Two - Nie wieder", "Echt - Fort von mir", "Everlast - What It's Like", "Kami & Purple Schulz - Ich will raus (Sehnsucht) '99", "Fusion - China in Your Hand", "E-17 - Betcha Can't Wait", "Jessica - How Will I Know (Who You Are)", "Jack Radics - No Matter", "Lamar - Fly (The Lonely Shepherd)", "Massive Töne - Chartbreaker (Einmal Star und zurück)", "In-Mood feat. Juliette - The Last Unicorn", "Crispy - Love Is Waiting", "Modern Talking feat. Eric Singleton - You Are Not Alone", "Tina Cousins - Pray", "Areena - Don't Break My (Heart of Glass)", "Deine Lakaien - Return", "Deeva - Genug ist genug", "Illmat!c - Still III"]], "isMix": true}, {"row": 187, "artist": "Just the Best", "title": "3/98", "year": 1998, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["4 the Cause - Ain't No Sunshine", "Pappa Bear feat. Van der Toorn - Honey Luv", "Des'ree - Life", "Paradisio - Bailando", "Jay-Z feat. Blackstreet - The City Is Mine", "Queen Pen - It's True", "Five - Got the Feelin'", "B*Witched - C'est la vie", "Culture Beat - Rendez-vous", "K-Ci & JoJo - All My Life", "Destiny's Child feat. Wyclef Jean - No, No, No (Part 2)", "Ma$e - Lookin' at Me", "Toni Cottura - My Life", "Modern Talking - Brother Louie '98", "Aqua - Turn Back Time", "Baddiel, Skinner & Lightning Seeds - Three Lions '98", "Deep Blue Something - She Is", "Kisha - Why?", "Julian Lennon - Day After Day", "Next - Too Close", "Lamar - Too Many Nights"], ["Dr. Motte & WestBam - Love Parade 1998 (One World One Future)", "Storm - Storm", "Paffendorf - Smile", "Vengaboys - Up & Down", "Dune feat. Vanessa - Electric Heaven", "Dial M for Moguai - Beatbox", "Lovestern Galaktika Project - Galaktika '98", "Scooter - How Much Is the Fish?", "Technotronic - Pump Up the Jam", "Dani König - Disco 3000", "Miss Kittin & The Hacker - 1982", "Hausmarke feat. Max - Turntablerocker (Beweg deinen Popo)", "Sabrina Setlur feat. Illmat!c - Folge dem Stern", "Superboys - Ich wünscht' du wärst bei mir", "Richie - Supa Richie", "Southside Rockers - Rock On", "Paradise Love Squad feat. Oli.P - Eivissa", "La Bomba feat. Los Primos - Chiquitan", "4 the Cause - Make Your Head Rock", "Sweetbox feat. D. Christopher Taylor - Shout (Let It All Out)", "Witt / Heppner - Die Flut"]], "isMix": true}, {"row": 188, "artist": "Bravo", "title": "Hits Best of 94", "year": 1994, "genre": "Pop / Charts (Sampler)", "favorit": false, "cds": [["Whigfield - Saturday Night", "DJ BoBo - Let the Dream Come True", "Snap! feat. Summer - Welcome to Tomorrow", "Mo-Do - Eins, zwei, Polizei", "La Bouche - Sweet Dreams", "Magic Affair - Omen III", "Maxx - Get-A-Way", "Jam & Spoon feat. Plavka - Right in the Night", "Scooter - Hyper Hyper", "Twenty 4 Seven feat. Stay-C & Nance - Is It Love", "Marusha - Somewhere over the Rainbow", "2 Unlimited - No One", "Mr. President - Up'n Away", "Ace of Base - Don't Turn Around", "Mark'Oh - Love Song", "K2 - Der Berg ruft", "Rednex - Cotton Eye Joe", "Reel 2 Real feat. The Mad Stuntman - I Like to Move It", "Snoop Doggy Dogg - What's My Name?", "Prince Ital Joe feat. Marky Mark - United"], ["All-4-One - I Swear", "Take That - Babe", "Joshua Kadison - Jessie", "Roxette - Sleeping in My Car", "Aerosmith - Cryin'", "The Rolling Stones - Love Is Strong", "Marius Müller-Westernhagen - Es geht mir gut", "Guns N' Roses - Since I Don't Have You", "Stiltskin - Inside", "R.E.M. - What's the Frequency, Kenneth?", "Die Toten Hosen - Alles aus Liebe", "Youssou N'Dour & Neneh Cherry - 7 Seconds", "Enigma - Return to Innocence", "Erasure - Always", "D:Ream - Things Can Only Get Better", "The Kelly Family - An Angel", "Children for Rwanda - Love Can Build a Bridge", "Cinematic feat. Heinz Rühmann & Oliver Grimm - Unser Lied (Lalelu)", "Lucilectric - Mädchen"]], "isMix": true}, {"row": 189, "artist": "Shop Direct", "title": "80s forever Die größten Legenden der 80er", "year": 2001, "genre": "Pop / 80er (Sampler)", "favorit": false, "cds": [["Boomtown Rats - I Don't Like Mondays", "Dexys Midnight Runners - Come On Eileen", "Soft Cell - Tainted Love", "Visage - Fade to Grey", "Animotion - Obsession", "Trans-X - Living on Video", "Styx - Mr. Roboto", "Evelyn Thomas - High Energy", "Donna Summer - She Works Hard for the Money", "Yazoo - Don't Go", "Shakatak - Mr. Manic & Sister Cool", "Lipps Inc. - Funkytown", "Cameo - Word Up!", "Fat Boys & Chubby Checker - The Twist (Yo, Twist!)", "Curiosity Killed the Cat - Down to Earth", "Captain Sensible - Wot", "Yello - The Race", "Godley & Creme - Cry"], ["REO Speedwagon - Keep On Loving You", "ABC - The Look of Love", "KC and the Sunshine Band - Please Don't Go", "Toto - Rosanna", "Phil Carmen - On My Way in L.A.", "Frankie Goes to Hollywood - The Power of Love", "Joe Cocker & Jennifer Warnes - Up Where We Belong", "Robert Palmer - Johnny and Mary", "Robin Gibb - Juliet", "Status Quo - What You're Proposing", "Shakatak - Down on the Street", "Dan Hartman - We Are the Young", "Boomtown Rats - Banana Republic", "Laid Back - Sunshine Reggae", "Styx - Boat on the River", "Yello - Desire", "Robert Palmer - Looking for Clues", "Dr. Hook - My Baby Makes Her Blue Jeans Talk"], ["Camouflage - Love Is a Shield", "Erasure - Sometimes", "The Hooters - Johnny B", "Mr. Mister - Kyrie", "REO Speedwagon - Can't Fight This Feeling", "Steve Winwood - Higher Love", "Black - Wonderful Life", "Sam Brown - Stop!", "Cock Robin - The Promise You Made", "Corey Hart - Sunglasses at Night", "Michael Sembello - Maniac", "Animotion - I Engineer", "Rick Springfield - Celebrate Youth", "Level 42 - Running in the Family", "Dan Hartman - I Can Dream About You", "Godley & Creme - A Little Piece of Heaven", "Curiosity Killed the Cat - Name and Number", "The Christians - Forgotten Town"], ["Fury in the Slaughterhouse - Time to Wonder (Live)", "Simple Minds - Don't You (Forget About Me)", "The Jeremy Days - Brand New Toy", "Big Country - Look Away", "Tears for Fears - Shout", "Frankie Goes to Hollywood - Rage Hard", "Status Quo - In the Army Now", "Marc Almond & Gene Pitney - Something's Gotten Hold of My Heart", "Bob Geldof - This Is the World Calling", "Camouflage - The Great Commandment", "Level 42 - Lessons in Love", "Rainbirds - Blueprint", "Eurythmics - When Tomorrow Comes", "John Farnham - You're the Voice", "Europe - The Final Countdown", "Robin Beck - The First Time", "Tony Carey - Room with a View", "Rio Reiser - Junimond"]], "isMix": true}, {"row": 190, "artist": "Chart Show", "title": "Hits der 80er", "year": 2011, "genre": "Pop / 80er (Sampler)", "favorit": false, "cds": [["ABC - The Look of Love (Part 1)", "Level 42 - Lessons in Love", "Camouflage - Love Is a Shield", "Visage - Fade to Grey", "Felix de Luxe - Taxi nach Paris", "Black - Wonderful Life", "Chris de Burgh - The Lady in Red", "Rainbirds - Blueprint", "Kim Wilde - You Keep Me Hangin' On", "Michael Sembello - Maniac", "Donna Summer - She Works Hard for the Money", "Lionel Richie - Penny Lover", "Nik Kershaw - Wouldn't It Be Good", "The Jeremy Days - Brand New Toy", "Bruce Willis - Under the Boardwalk", "Stephan Remmler - Keine Sterne in Athen"], ["Tears for Fears - Shout", "Al Corley - Square Rooms", "Status Quo - In the Army Now", "Womack & Womack - Teardrops", "Kool & The Gang - Celebration", "Dexys Midnight Runners - Come On Eileen", "Hubert Kah - Rosemarie", "Trio - Da Da Da (Ich lieb' dich nicht, du liebst mich nicht)", "Harold Faltermeyer - Axel F", "Rockwell - Somebody's Watching Me", "Cameo - Word Up!", "Udo Lindenberg - Sonderzug nach Pankow", "Robert Palmer - Addicted to Love", "Joe Jackson - Steppin' Out", "Jan Hammer - Crockett's Theme", "Yello - Vicious Games"]], "isMix": true}, {"row": 191, "artist": "ZDF", "title": "30 Jahre Goldene Zeiten die größten deutschen Schlager", "year": 1993, "genre": "Schlager (Sampler)", "favorit": false, "cds": [["Ronny - Oh My Darling Caroline", "Drafi Deutscher - Marmor, Stein und Eisen bricht", "France Gall - Attends ou va-t'en (A Banda)", "Karel Gott - Weißt du wohin", "Roy Black & Anita - Schön ist es auf der Welt zu sein", "Wum's Gesang - Ich wünsch' mir 'ne kleine Mietzekatze", "Michael Holm - Tränen lügen nicht", "Howard Carpendale - Deine Spuren im Sand", "Tony Holiday - Tanze Samba mit mir", "Bernd Clüver - Der Junge mit der Mundharmonika", "Dschinghis Khan - Dschinghis Khan", "Roland Kaiser - Santa Maria", "Andy Borg - Adios Amor", "Nino de Angelo - Jenseits von Eden", "Nicole - Ein bißchen Frieden", "Matthias Reim - Verdammt, ich lieb' dich", "Danyel Gérard - Butterfly", "Jonny Hill - Ruf' Teddybär eins-vier"]], "isMix": true}], "total": 189, "total_discs": 241};
+const BAKED = RAW.albums;
+
+function norm(s){
+  if(!s) return '';
+  s = s.toString().toLowerCase();
+  s = s.replace(/ß/g,'ss');
+  s = s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return s;
+}
+const ARTICLES = /^(the|die|der|das)\s+/i;
+function sortkey(artist){
+  let s = (artist||'').trim().replace(ARTICLES,'');
+  s = s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return s.toUpperCase();
+}
+function escapeHtml(s){
+  return (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function highlight(raw, q){
+  raw = raw==null ? '' : String(raw);
+  if(!q) return escapeHtml(raw);
+  const n = norm(raw);
+  const idx = n.indexOf(q);
+  if(idx === -1) return escapeHtml(raw);
+  return escapeHtml(raw.slice(0,idx)) + '<mark>' + escapeHtml(raw.slice(idx, idx+q.length)) + '</mark>' + escapeHtml(raw.slice(idx+q.length));
+}
+function normGenreTag(t){
+  t = t.trim();
+  if(t === 'Synthpop') return 'Synth-Pop';
+  if(t === 'Elektronisch') return 'Electronic';
+  return t;
+}
+function genreParts(genre){
+  return (genre||'').split('/').map(normGenreTag).filter(Boolean);
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return d && m && y ? (d+'.'+m+'.'+y) : iso;
+}
+
+/* ---------------- state ---------------- */
+let overridesByRow = {};   // row -> {artist,title,year,genre,isMix,cds,rating,note,loanedTo,loanedAt,deleted}
+let dbAlbums = [];         // from 'newcds', each already includes id
+let wishlist = [];         // from 'wishlist'
+let dbAvailable = null;
+let favOnly = false;
+let newOnly = false;
+
+function mapNewCd(id, d){
+  return {
+    id: id, artist: d.artist||'', title: d.title||'', year: d.year||null,
+    genre: d.genre||'', rating: typeof d.rating === 'number' ? d.rating : (d.favorit?5:0),
+    cds: Array.isArray(d.cds) ? d.cds : [], isMix: !!d.isMix, fromDb: true,
+    note: d.note||'', loanedTo: d.loanedTo||null, loanedAt: d.loanedAt||null,
+    addedAt: d.addedAt||null,
+  };
+}
+
+function cdIcon(on){
+  const c = on ? 'var(--accent)' : 'var(--ink-muted)';
+  return '<svg width="20" height="20" viewBox="0 0 20 20" class="cdicon"><circle cx="10" cy="10" r="8.5" fill="none" stroke="'+c+'" stroke-width="1.4"/><circle cx="10" cy="10" r="2.6" fill="none" stroke="'+c+'" stroke-width="1.4"/><circle cx="10" cy="10" r="1" fill="'+c+'"/></svg>';
+}
+function starsHtml(rating, mode){
+  mode = mode || 'readonly';
+  let h = '<div class="stars '+mode+'">';
+  for(let i=1;i<=5;i++){ h += '<span data-n="'+i+'" class="'+(i<=rating?'on':'')+'">★</span>'; }
+  h += '</div>';
+  return h;
+}
+
+/* ---------------- merge baked + overrides + db-added ---------------- */
+function buildList(){
+  const bakedMerged = BAKED.map(a => {
+    const base = {
+      id: 'b_'+a.row, row: a.row, fromDb: false,
+      artist: a.artist, title: a.title, year: a.year, genre: a.genre, isMix: a.isMix, cds: a.cds,
+      rating: a.favorit ? 5 : 0, note: '', loanedTo: null, loanedAt: null, deleted: false, addedAt: null,
+    };
+    const ov = overridesByRow[a.row];
+    if(ov) Object.assign(base, ov);
+    return base;
+  });
+  const combined = bakedMerged.filter(a=>!a.deleted).concat(dbAlbums);
+  combined.forEach(a => {
+    a._artist = norm(a.artist);
+    a._title = norm(a.title);
+    a._genre = norm(a.genre);
+    a._cds = (a.cds||[]).map(cd => (cd||[]).map(t => ({raw:t, n:norm(t)})));
+  });
+  const regular = combined.filter(a=>!a.isMix).sort((x,y)=>{
+    const kx = sortkey(x.artist), ky = sortkey(y.artist);
+    if(kx<ky) return -1; if(kx>ky) return 1;
+    return (x.title||'').localeCompare(y.title||'', 'de');
+  });
+  const mix = combined.filter(a=>a.isMix).sort((x,y)=>{
+    const yx = x.year||0, yy = y.year||0;
+    if(yx!==yy) return yx-yy;
+    return sortkey(x.artist) < sortkey(y.artist) ? -1 : 1;
+  });
+  regular.forEach((a,i)=>{ a.pos=i+1; a.posTotal=regular.length; a.letter = (sortkey(a.artist)[0]||'#').replace(/[^A-Z]/,'#'); });
+  mix.forEach((a,i)=>{ a.pos=i+1; a.posTotal=mix.length; a.group = String(a.year||'?'); });
+  return {regular, mix, all: regular.concat(mix)};
+}
+
+let CURRENT = {regular:[], mix:[], all:[]};
+let CURRENT_BY_ID = {};
+
+/* ---------------- genre dropdown ---------------- */
+const genreSelEl = document.getElementById('genre');
+function buildGenres(all){
+  const cur = genreSelEl.value;
+  const tagSet = new Set();
+  all.forEach(a => genreParts(a.genre).forEach(t=>tagSet.add(t)));
+  const genres = [...tagSet].sort((a,b)=>a.localeCompare(b,'de'));
+  genreSelEl.innerHTML = '<option value="">Alle Genres</option>' + genres.map(g=>'<option value="'+escapeHtml(g)+'">'+escapeHtml(g)+'</option>').join('');
+  genreSelEl.value = genres.includes(cur) ? cur : '';
+}
+
+document.getElementById('favChip').onclick = function(){ favOnly = !favOnly; this.classList.toggle('active', favOnly); render(); };
+document.getElementById('newChip').onclick = function(){ newOnly = !newOnly; this.classList.toggle('active', newOnly); render(); };
+genreSelEl.onchange = render;
+
+const qInput = document.getElementById('q');
+const clearBtn = document.getElementById('clear');
+qInput.addEventListener('input', () => { clearBtn.style.display = qInput.value ? 'block' : 'none'; render(); });
+clearBtn.onclick = () => { qInput.value=''; clearBtn.style.display='none'; render(); };
+
+function matchAlbum(a, q){
+  let trackHits = [];
+  a._cds.forEach((cd,ci)=>{ cd.forEach((t,ti)=>{ if(t.n.includes(q)) trackHits.push({cd:ci, ti, raw:t.raw}); }); });
+  const artistHit = a._artist.includes(q);
+  const titleHit = a._title.includes(q);
+  const genreHit = a._genre.includes(q);
+  const score = trackHits.length*3 + (artistHit?2:0) + (titleHit?2:0) + (genreHit?1:0);
+  return {hit: trackHits.length||artistHit||titleHit||genreHit, trackHits, score};
+}
+
+function cardHtml(a, q, trackHits){
+  let hitsHtml = '';
+  if(trackHits && trackHits.length){
+    hitsHtml = trackHits.map(h => {
+      const cdLabel = a.cds.length > 1 ? ('CD ' + (h.cd+1) + ' · ') : '';
+      return '<div class="hit"><div class="cdlabel">'+cdLabel+'Titel '+(h.ti+1)+'</div><b>' + highlight(h.raw, q) + '</b></div>';
+    }).join('');
+  }
+  const discCount = a.cds.length;
+  const discLabel = discCount > 1 ? (discCount + ' CDs') : (discCount === 1 ? '1 CD' : '');
+  const posLabel = a.isMix ? ('MIX ' + a.pos + '/' + a.posTotal) : ('A-Z ' + a.pos + '/' + a.posTotal);
+  const newBadge = a.fromDb ? '<span class="badge">neu erfasst</span>' : '';
+  const loanBadge = a.loanedTo ? '<span class="badge loan">verliehen: '+escapeHtml(a.loanedTo)+(a.loanedAt?' · '+fmtDate(a.loanedAt):'')+'</span>' : '';
+  const noteBadge = a.note ? '<span class="badge">'+escapeHtml(a.note)+'</span>' : '';
+  const badges = (newBadge+loanBadge+noteBadge) ? '<div class="badge-row">'+newBadge+loanBadge+noteBadge+'</div>' : '';
+
+  return '' +
+    '<div class="card'+(a.rating>=4?' isfav':'')+'" data-id="'+a.id+'">' +
+      '<div class="card-top">' +
+        '<div class="row2">' +
+          cdIcon(a.rating>0) +
+          '<div class="info">' +
+            '<div class="artist">' + highlight(a.artist, q) + '</div>' +
+            '<div class="title">' + highlight(a.title || '', q) + '</div>' +
+            '<div class="meta">' + [a.year, a.genre, discLabel].filter(Boolean).map(x=>escapeHtml(String(x))).join(' · ') + '</div>' +
+            starsHtml(a.rating) +
+            badges +
+          '</div>' +
+        '</div>' +
+        '<div class="pos">'+posLabel+'</div>' +
+      '</div>' +
+      hitsHtml +
+      '<div class="toggle" data-open="0">Titelliste anzeigen ▾</div>' +
+      '<div class="tracklist">' +
+        a.cds.map((cd,ci) => {
+          const label = a.cds.length > 1 ? ('CD ' + (ci+1)) : 'Titelliste';
+          return '<div class="disc"><h4>' + label + '</h4><ol>' +
+            (cd||[]).map(t => '<li>' + highlight(t, q) + '</li>').join('') +
+            '</ol></div>';
+        }).join('') +
+      '</div>' +
+      '<div class="cardactions">' +
+        '<button class="mini" data-act="rate">Bewerten</button>' +
+        '<button class="mini" data-act="edit">Bearbeiten</button>' +
+        '<button class="mini" data-act="loan">'+(a.loanedTo ? 'Zurückerhalten' : 'Verleihen')+'</button>' +
+        '<button class="mini" data-act="sticker">Sticker</button>' +
+        '<button class="mini danger" data-act="delete">Löschen</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function wireCard(el, trackHits){
+  const toggle = el.querySelector('.toggle');
+  const tl = el.querySelector('.tracklist');
+  if(trackHits && trackHits.length){ tl.classList.add('open'); toggle.textContent = 'Titelliste ausblenden ▴'; toggle.dataset.open = '1'; }
+  toggle.onclick = () => {
+    const open = toggle.dataset.open === '1';
+    tl.classList.toggle('open', !open);
+    toggle.textContent = open ? 'Titelliste anzeigen ▾' : 'Titelliste ausblenden ▴';
+    toggle.dataset.open = open ? '0' : '1';
+  };
+}
+
+function render(){
+  const built = buildList();
+  CURRENT = built;
+  CURRENT_BY_ID = {};
+  built.all.forEach(a=>{ CURRENT_BY_ID[a.id] = a; });
+  const {regular, mix, all} = built;
+  buildGenres(all);
+
+  const nFav = all.filter(a=>a.rating>=4).length;
+  const nRated = all.filter(a=>a.rating>0).length;
+  const avgRating = nRated ? (all.reduce((s,a)=>s+a.rating,0)/nRated).toFixed(1) : '–';
+  document.getElementById('stats').textContent =
+    regular.length + ' Alben · ' + mix.length + ' Mix-CDs · ' + all.reduce((s,a)=>s+(a.cds.length||0),0) + ' CDs · ' + nFav + ' Favoriten · Ø ' + avgRating + '★';
+
+  const azbar = document.getElementById('azbar');
+  const letters = [...new Set(regular.map(a=>a.letter))].sort();
+  azbar.innerHTML = '';
+  letters.forEach(L=>{
+    const b = document.createElement('div');
+    b.className = 'az'; b.textContent = L;
+    b.onclick = () => { const el = document.getElementById('L_'+L); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); };
+    azbar.appendChild(b);
+  });
+  const mixJump = document.createElement('div');
+  mixJump.className = 'az mixjump'; mixJump.textContent = 'MIX';
+  mixJump.onclick = () => { const el = document.getElementById('S_mix'); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); };
+  azbar.appendChild(mixJump);
+
+  const qraw = qInput.value.trim();
+  const q = norm(qraw);
+  const genreFilter = genreSelEl.value;
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+
+  function passFilters(a){
+    if(favOnly && !(a.rating>=4)) return false;
+    if(newOnly && !a.fromDb) return false;
+    if(genreFilter && !genreParts(a.genre).includes(genreFilter)) return false;
+    return true;
+  }
+
+  function appendCard(a, q, trackHits){
+    const div = document.createElement('div');
+    div.innerHTML = cardHtml(a, q, trackHits);
+    const card = div.firstElementChild;
+    wireCard(card, trackHits);
+    results.appendChild(card);
+  }
+
+  if(newOnly && !q){
+    const list = all.filter(passFilters).sort((x,y)=> (y.addedAt||'').localeCompare(x.addedAt||''));
+    const sh = document.createElement('div');
+    sh.className = 'sectionhead pixel';
+    sh.innerHTML = 'NEU HINZUGEFÜGT <span class="n">'+list.length+'</span>';
+    results.appendChild(sh);
+    if(!list.length){ results.innerHTML += '<div class="empty">Noch keine CDs über die App hinzugefügt.</div>'; return; }
+    list.forEach(a=>appendCard(a,'',[]));
+    return;
+  }
+
+  if(q.length >= 1){
+    const matches = all.filter(passFilters).map(a=>{
+      const m = matchAlbum(a, q);
+      return m.hit ? {a, ...m} : null;
+    }).filter(Boolean).sort((x,y)=> y.score - x.score || x.a.pos - y.a.pos);
+
+    if(!matches.length){ results.innerHTML = '<div class="empty">Nichts gefunden. Anderen Begriff versuchen?</div>'; return; }
+    matches.forEach(({a, trackHits}) => appendCard(a, q, trackHits));
+    return;
+  }
+
+  const regFiltered = regular.filter(passFilters);
+  const mixFiltered = mix.filter(passFilters);
+
+  if(!regFiltered.length && !mixFiltered.length){ results.innerHTML = '<div class="empty">Nichts gefunden.</div>'; return; }
+
+  if(regFiltered.length){
+    const sh = document.createElement('div');
+    sh.className = 'sectionhead pixel';
+    sh.innerHTML = 'SAMMLUNG A–Z <span class="n">'+regFiltered.length+'</span>';
+    results.appendChild(sh);
+    let lastLetter = null;
+    regFiltered.forEach(a=>{
+      if(a.letter !== lastLetter){
+        lastLetter = a.letter;
+        const h = document.createElement('div');
+        h.className = 'grouphead'; h.id = 'L_'+a.letter; h.textContent = a.letter;
+        results.appendChild(h);
+      }
+      appendCard(a, '', []);
+    });
+  }
+
+  if(mixFiltered.length){
+    const sh = document.createElement('div');
+    sh.className = 'sectionhead pixel';
+    sh.id = 'S_mix';
+    sh.innerHTML = 'MIX-CDS &amp; SAMPLER — HINTEN, NACH JAHR <span class="n">'+mixFiltered.length+'</span>';
+    results.appendChild(sh);
+    let lastGroup = null;
+    mixFiltered.forEach(a=>{
+      if(a.group !== lastGroup){
+        lastGroup = a.group;
+        const h = document.createElement('div');
+        h.className = 'grouphead'; h.textContent = a.group;
+        results.appendChild(h);
+      }
+      appendCard(a, '', []);
+    });
+  }
+}
+
+render();
+
+/* ---------------- toast (no native alert/confirm/prompt — blocked in the Artifact sandbox) ---------------- */
+function toast(msg, isErr){
+  let t = document.getElementById('toastEl');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toastEl';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.classList.remove('show'); }, 3400);
+}
+function alertMsg(t){ toast(t, true); }
+
+/* ---------------- card action delegation (edit/loan/sticker/delete/rating) ---------------- */
+document.getElementById('results').addEventListener('click', (e) => {
+  const btn = e.target.closest('button.mini');
+  if(!btn) return;
+  const card = e.target.closest('.card');
+  const a = CURRENT_BY_ID[card.dataset.id];
+  if(!a) return;
+  const act = btn.dataset.act;
+  if(act === 'rate') openRateModal(a);
+  else if(act === 'edit') openAddEditModal(a);
+  else if(act === 'delete') openDeleteModal(a);
+  else if(act === 'loan') a.loanedTo ? openReturnModal(a) : openLoanModal(a);
+  else if(act === 'sticker') openStickerModal(a);
+});
+
+/* ---------------- rate (dedicated modal, big tap targets) ---------------- */
+function openRateModal(a){
+  if(dbAvailable === false){ toast('Zum Bewerten brauchst du kurz Internet.', true); return; }
+  openModal('Bewertung');
+  let picked = a.rating;
+  dialogBody.innerHTML = '<div style="text-align:center; padding:10px 0;">' +
+    '<div>'+escapeHtml(a.artist)+' – '+escapeHtml(a.title)+'</div>' +
+    '<div id="rateStars" style="margin-top:14px; display:flex; justify-content:center;">'+starsHtml(picked,'picker')+'</div>' +
+    '</div>';
+  dialogBody.querySelector('#rateStars').addEventListener('click', (e)=>{
+    const s = e.target.closest('span[data-n]');
+    if(!s) return;
+    const n = parseInt(s.dataset.n,10);
+    picked = (n === picked) ? 0 : n;
+    dialogBody.querySelector('#rateStars').innerHTML = starsHtml(picked,'picker');
+  });
+  dialogActions.innerHTML = '<button class="dbtn" id="rateCancelBtn">Abbrechen</button><button class="dbtn primary" id="rateSaveBtn">Speichern</button>';
+  document.getElementById('rateCancelBtn').onclick = closeModal;
+  document.getElementById('rateSaveBtn').onclick = async () => {
+    try { await persistPatch(a, {rating: picked}); closeModal(); toast('Bewertung gespeichert.'); }
+    catch(e){ formmsg.textContent = 'Konnte nicht gespeichert werden. Bist du online?'; formmsg.className = 'formmsg err'; }
+  };
+}
+
+/* ---------------- loan (modal instead of prompt()) ---------------- */
+function openLoanModal(a){
+  if(dbAvailable === false){ toast('Dafür brauchst du kurz Internet.', true); return; }
+  openModal('CD verleihen');
+  dialogBody.innerHTML = '<div class="field"><label>An wen verleihst du "'+escapeHtml(a.artist)+' – '+escapeHtml(a.title)+'"?</label><input id="loanName" type="text" placeholder="Name"></div>';
+  dialogActions.innerHTML = '<button class="dbtn" id="loanCancelBtn">Abbrechen</button><button class="dbtn primary" id="loanSaveBtn">Verleihen</button>';
+  document.getElementById('loanCancelBtn').onclick = closeModal;
+  const nameInput = document.getElementById('loanName');
+  nameInput.focus();
+  document.getElementById('loanSaveBtn').onclick = async () => {
+    const name = nameInput.value.trim();
+    if(!name){ formmsg.textContent = 'Bitte einen Namen eingeben.'; formmsg.className = 'formmsg err'; return; }
+    try { await persistPatch(a, {loanedTo: name, loanedAt: todayISO()}); closeModal(); toast('Als verliehen markiert.'); }
+    catch(e){ formmsg.textContent = 'Konnte nicht gespeichert werden. Bist du online?'; formmsg.className = 'formmsg err'; }
+  };
+}
+function openReturnModal(a){
+  if(dbAvailable === false){ toast('Dafür brauchst du kurz Internet.', true); return; }
+  openModal('CD zurückerhalten');
+  dialogBody.innerHTML = '<div>"'+escapeHtml(a.artist)+' – '+escapeHtml(a.title)+'" ist aktuell verliehen an <b>'+escapeHtml(a.loanedTo)+'</b>'+(a.loanedAt?' (seit '+fmtDate(a.loanedAt)+')':'')+'. Zurückerhalten?</div>';
+  dialogActions.innerHTML = '<button class="dbtn" id="retCancelBtn">Abbrechen</button><button class="dbtn primary" id="retSaveBtn">Zurückerhalten</button>';
+  document.getElementById('retCancelBtn').onclick = closeModal;
+  document.getElementById('retSaveBtn').onclick = async () => {
+    try { await persistPatch(a, {loanedTo: null, loanedAt: null}); closeModal(); toast('Als zurückerhalten markiert.'); }
+    catch(e){ formmsg.textContent = 'Konnte nicht gespeichert werden. Bist du online?'; formmsg.className = 'formmsg err'; }
+  };
+}
+
+/* ---------------- delete (modal instead of confirm()) ---------------- */
+function openDeleteModal(a){
+  if(dbAvailable === false){ toast('Dafür brauchst du kurz Internet.', true); return; }
+  openModal('CD löschen');
+  dialogBody.innerHTML = '<div>"'+escapeHtml(a.artist)+' – '+escapeHtml(a.title)+'" wirklich aus dem Katalog entfernen?</div>';
+  dialogActions.innerHTML = '<button class="dbtn" id="delCancelBtn">Abbrechen</button><button class="dbtn danger" id="delSaveBtn">Löschen</button>';
+  document.getElementById('delCancelBtn').onclick = closeModal;
+  document.getElementById('delSaveBtn').onclick = async () => {
+    try {
+      const db = await claude.use('db');
+      if(!db) throw 0;
+      if(a.fromDb) await db.collection('newcds').doc(a.id).delete();
+      else await persistPatch(a, {deleted: true});
+      closeModal(); toast('Gelöscht.');
+    } catch(e){ formmsg.textContent = 'Konnte nicht gelöscht werden. Bist du online?'; formmsg.className = 'formmsg err'; }
+  };
+}
+
+/** Writes a partial patch to the right place (overrides for baked, direct doc for db-added). */
+async function persistPatch(a, patch){
+  const db = await claude.use('db');
+  if(!db) throw new Error('no db');
+  if(a.fromDb){
+    await db.collection('newcds').doc(a.id).update(patch);
+  } else {
+    const current = overridesByRow[a.row] || {};
+    const merged = {...current, ...patch};
+    await db.collection('overrides').doc('row_'+a.row).set(merged);
+  }
+}
+
+/* ---------------- db wiring ---------------- */
+(async () => {
+  let db = null;
+  try { db = await claude.use('db'); } catch(e) { db = null; }
+  if(!db){ dbAvailable = false; disableWriteFeatures(); return; }
+  dbAvailable = true;
+  try {
+    db.collection('newcds').limit(1000).onSnapshot(snap => {
+      dbAlbums = snap.docs.filter(d=>d.exists).map(d => mapNewCd(d.id, d.data())).filter(d=>!d.deleted);
+      render();
+    }, err => console.warn('newcds snapshot error', err));
+    db.collection('overrides').limit(1000).onSnapshot(snap => {
+      const map = {};
+      snap.docs.forEach(d=>{ if(d.exists){ const row = parseInt(d.id.replace('row_',''),10); map[row] = d.data(); } });
+      overridesByRow = map;
+      render();
+    }, err => console.warn('overrides snapshot error', err));
+    db.collection('wishlist').limit(500).onSnapshot(snap => {
+      wishlist = snap.docs.filter(d=>d.exists).map(d=>({id:d.id, ...d.data()}));
+    }, err => console.warn('wishlist snapshot error', err));
+  } catch(e) { console.warn(e); }
+})();
+
+function disableWriteFeatures(){
+  document.getElementById('m_add').style.opacity = '0.4';
+  document.getElementById('m_wishlist').style.opacity = '0.4';
+}
+
+/* ---------------- generic modal ---------------- */
+const backdrop = document.getElementById('backdrop');
+const dialogTitle = document.getElementById('dialogTitle');
+const dialogBody = document.getElementById('dialogBody');
+const dialogActions = document.getElementById('dialogActions');
+const formmsg = document.getElementById('formmsg');
+
+function openModal(title){
+  dialogTitle.textContent = title;
+  dialogBody.innerHTML = '';
+  dialogActions.innerHTML = '';
+  formmsg.textContent = ''; formmsg.className = 'formmsg';
+  backdrop.classList.add('open');
+}
+function closeModal(){ backdrop.classList.remove('open'); }
+document.getElementById('dialogClose').onclick = closeModal;
+backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) closeModal(); });
+
+/* ---------------- add / edit CD ---------------- */
+function openAddEditModal(existing){
+  if(dbAvailable === false){ alertMsg('Zum Bearbeiten/Hinzufügen brauchst du kurz Internet.'); return; }
+  openModal(existing ? 'CD bearbeiten' : 'Neue CD aufnehmen');
+
+  const genreList = [...new Set(CURRENT.all.map(a=>a.genre).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
+
+  dialogBody.innerHTML =
+    '<div class="field-row">' +
+      '<div class="field"><label>Interpret *</label><input id="f_artist" type="text"></div>' +
+      '<div class="field"><label>Jahr</label><input id="f_year" type="number" min="1900" max="2100"></div>' +
+    '</div>' +
+    '<div class="field"><label>Album / Titel *</label><input id="f_title" type="text"></div>' +
+    '<div class="field"><label>Genre</label><input id="f_genre" type="text" list="genreList"><datalist id="genreList">' +
+      genreList.map(g=>'<option value="'+escapeHtml(g)+'">').join('') +
+    '</datalist></div>' +
+    '<div class="checkrow"><input type="checkbox" id="f_mix"><label>Mix-CD / Sampler (mehrere Interpreten) — kommt ans Ende, sortiert nach Jahr</label></div>' +
+    '<div class="field"><label>Bewertung</label><div id="f_rating">'+starsHtml(existing?existing.rating:0, 'picker')+'</div></div>' +
+    '<div class="field"><label>Notiz (Zustand etc.)</label><input id="f_note" type="text"></div>' +
+    '<div class="field"><label>Anzahl CDs</label><input id="f_count" type="number" min="1" max="6" value="1"></div>' +
+    '<div class="cdblocks" id="cdblocks"></div>';
+
+  const countInput = document.getElementById('f_count');
+  const cdblocks = document.getElementById('cdblocks');
+  function renderCdBlocks(prefill){
+    const n = Math.max(1, Math.min(6, parseInt(countInput.value||'1',10)));
+    countInput.value = n;
+    const existingVals = prefill || [...cdblocks.querySelectorAll('textarea')].map(t=>t.value);
+    cdblocks.innerHTML = '';
+    for(let i=0;i<n;i++){
+      const field = document.createElement('div');
+      field.className = 'field';
+      const label = n > 1 ? ('CD ' + (i+1) + ' — Titelliste (eine Zeile pro Song)') : 'Titelliste (eine Zeile pro Song)';
+      field.innerHTML = '<label>'+label+'</label><textarea data-cd="'+i+'"></textarea>';
+      cdblocks.appendChild(field);
+      if(existingVals[i]) field.querySelector('textarea').value = existingVals[i];
+    }
+  }
+  countInput.addEventListener('input', () => renderCdBlocks());
+
+  let formRating = existing ? existing.rating : 0;
+  dialogBody.querySelector('#f_rating').addEventListener('click', (e)=>{
+    const s = e.target.closest('span[data-n]');
+    if(!s) return;
+    const n = parseInt(s.dataset.n,10);
+    formRating = (n === formRating) ? 0 : n;
+    dialogBody.querySelector('#f_rating').innerHTML = starsHtml(formRating, 'picker');
+  });
+
+  if(existing){
+    document.getElementById('f_artist').value = existing.artist||'';
+    document.getElementById('f_title').value = existing.title||'';
+    document.getElementById('f_year').value = existing.year||'';
+    document.getElementById('f_genre').value = existing.genre||'';
+    document.getElementById('f_mix').checked = !!existing.isMix;
+    document.getElementById('f_note').value = existing.note||'';
+    countInput.value = Math.max(1, (existing.cds||[]).length || 1);
+    renderCdBlocks((existing.cds||[]).map(cd=>(cd||[]).join('\n')));
+  } else {
+    renderCdBlocks();
+  }
+
+  let forceSave = false;
+  const saveBtnLabel = existing ? 'Speichern' : 'Hinzufügen';
+  dialogActions.innerHTML = '<button class="dbtn" id="cancelBtn">Abbrechen</button><button class="dbtn primary" id="saveBtn">'+saveBtnLabel+'</button>';
+  document.getElementById('cancelBtn').onclick = closeModal;
+  const saveBtn = document.getElementById('saveBtn');
+
+  saveBtn.onclick = async () => {
+    const artist = document.getElementById('f_artist').value.trim();
+    const title = document.getElementById('f_title').value.trim();
+    if(!artist || !title){
+      formmsg.textContent = 'Interpret und Titel sind Pflichtfelder.'; formmsg.className = 'formmsg err'; return;
+    }
+    const year = parseInt(document.getElementById('f_year').value||'',10) || null;
+    const genre = document.getElementById('f_genre').value.trim();
+    const isMix = document.getElementById('f_mix').checked;
+    const note = document.getElementById('f_note').value.trim();
+    const cds = [...cdblocks.querySelectorAll('textarea')].map(t => t.value.split('\n').map(s=>s.trim()).filter(Boolean));
+
+    if(!forceSave){
+      const na = norm(artist), nt = norm(title);
+      const dupe = CURRENT.all.find(x => x.id !== (existing&&existing.id) && norm(x.artist)===na && norm(x.title)===nt);
+      if(dupe){
+        formmsg.textContent = '"'+dupe.artist+' – '+dupe.title+'" gibt es schon in der Sammlung. Nochmal klicken um trotzdem zu speichern.';
+        formmsg.className = 'formmsg err';
+        forceSave = true;
+        saveBtn.textContent = 'Trotzdem speichern';
+        return;
+      }
+    }
+
+    saveBtn.disabled = true; saveBtn.textContent = 'Speichere…';
+    formmsg.textContent = ''; formmsg.className = 'formmsg';
+    try {
+      const db = await claude.use('db');
+      if(!db) throw {code:'not_granted'};
+      const patch = {artist, title, year, genre, isMix, note, cds, rating: formRating};
+      if(existing && existing.fromDb){
+        await db.collection('newcds').doc(existing.id).update(patch);
+      } else if(existing && !existing.fromDb){
+        const current = overridesByRow[existing.row] || {};
+        await db.collection('overrides').doc('row_'+existing.row).set({...current, ...patch});
+      } else {
+        await db.collection('newcds').add({...patch, addedAt: new Date().toISOString()});
+      }
+      closeModal();
+    } catch(e) {
+      saveBtn.disabled = false; saveBtn.textContent = saveBtnLabel;
+      formmsg.textContent = 'Konnte nicht gespeichert werden (' + (e && e.code || 'Fehler') + '). Bist du online?';
+      formmsg.className = 'formmsg err';
+    }
+  };
+}
+document.getElementById('m_add').onclick = () => openAddEditModal(null);
+
+/* ---------------- stats ---------------- */
+function openStatsModal(){
+  const all = CURRENT.all;
+  const nAlbums = all.length;
+  const nDiscs = all.reduce((s,a)=>s+(a.cds.length||0),0);
+  const rated = all.filter(a=>a.rating>0);
+  const avg = rated.length ? (rated.reduce((s,a)=>s+a.rating,0)/rated.length).toFixed(2) : '–';
+  const years = all.map(a=>a.year).filter(Boolean);
+  const minY = years.length ? Math.min(...years) : '–';
+  const maxY = years.length ? Math.max(...years) : '–';
+
+  const genreCount = {};
+  all.forEach(a => genreParts(a.genre).forEach(g => { genreCount[g] = (genreCount[g]||0)+1; }));
+  const topGenre = Object.entries(genreCount).sort((a,b)=>b[1]-a[1])[0];
+
+  const artistCount = {};
+  all.forEach(a => { artistCount[a.artist] = (artistCount[a.artist]||0)+1; });
+  const topArtist = Object.entries(artistCount).sort((a,b)=>b[1]-a[1])[0];
+
+  const decadeCount = {};
+  years.forEach(y => { const d = Math.floor(y/10)*10; decadeCount[d] = (decadeCount[d]||0)+1; });
+  const decades = Object.keys(decadeCount).map(Number).sort((a,b)=>a-b);
+  const maxDecade = Math.max(1, ...decades.map(d=>decadeCount[d]));
+
+  openModal('Statistik');
+  dialogBody.innerHTML =
+    '<div class="statgrid">' +
+      '<div class="stitem"><div class="snum">'+nAlbums+'</div><div class="slabel">Alben</div></div>' +
+      '<div class="stitem"><div class="snum">'+nDiscs+'</div><div class="slabel">CDs gesamt</div></div>' +
+      '<div class="stitem"><div class="snum">'+avg+'★</div><div class="slabel">Ø Bewertung ('+rated.length+' bewertet)</div></div>' +
+      '<div class="stitem"><div class="snum">'+minY+'–'+maxY+'</div><div class="slabel">Jahresspanne</div></div>' +
+      '<div class="stitem"><div class="snum">'+(topGenre?escapeHtml(topGenre[0]):'–')+'</div><div class="slabel">Top-Genre ('+(topGenre?topGenre[1]:0)+')</div></div>' +
+      '<div class="stitem"><div class="snum">'+(topArtist?escapeHtml(topArtist[0]):'–')+'</div><div class="slabel">Meiste Alben ('+(topArtist?topArtist[1]:0)+')</div></div>' +
+    '</div>' +
+    '<div class="pixel" style="font-size:11px; margin-bottom:6px;">JAHRZEHNTE</div>' +
+    decades.map(d => {
+      const c = decadeCount[d];
+      const w = Math.max(1, Math.round((c/maxDecade)*20));
+      return '<div class="barline"><div class="blabel">'+d+'er</div><div class="bbar">'+'█'.repeat(w)+'</div><div class="bnum">'+c+'</div></div>';
+    }).join('');
+  dialogActions.innerHTML = '<button class="dbtn primary" id="statsCloseBtn">Schließen</button>';
+  document.getElementById('statsCloseBtn').onclick = closeModal;
+}
+document.getElementById('m_stats').onclick = openStatsModal;
+
+/* ---------------- random ---------------- */
+document.getElementById('m_random').onclick = () => {
+  const pool = CURRENT.all;
+  if(!pool.length) return;
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  qInput.value = ''; clearBtn.style.display = 'none'; favOnly=false; newOnly=false;
+  document.getElementById('favChip').classList.remove('active');
+  document.getElementById('newChip').classList.remove('active');
+  genreSelEl.value = '';
+  render();
+  requestAnimationFrame(() => {
+    const groupEl = pick.isMix ? document.getElementById('S_mix') : document.getElementById('L_'+pick.letter);
+    const card = document.querySelector('.card[data-id="'+pick.id+'"]');
+    if(card){
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      card.classList.add('flash');
+      const toggle = card.querySelector('.toggle');
+      if(toggle && toggle.dataset.open === '0') toggle.click();
+      setTimeout(()=>card.classList.remove('flash'), 1700);
+    }
+  });
+};
+
+/* ---------------- export ---------------- */
+document.getElementById('m_export').onclick = async () => {
+  try {
+    const downloads = await claude.use('downloads');
+    if(!downloads){ alertMsg('Export braucht die Verbindung zu claude.ai (kurz online sein).'); return; }
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      albums: CURRENT.all.map(a => ({
+        artist: a.artist, title: a.title, year: a.year, genre: a.genre, isMix: a.isMix,
+        rating: a.rating, note: a.note, loanedTo: a.loanedTo, loanedAt: a.loanedAt,
+        cds: a.cds, quelle: a.fromDb ? 'app' : 'excel',
+      })),
+      wishlist: wishlist.map(w => ({artist: w.artist, title: w.title, note: w.note})),
+    };
+    await downloads.save({filename: 'cd-katalog-export.json', data: JSON.stringify(payload, null, 2)});
+  } catch(e) {
+    if(e && e.code !== 'declined') alertMsg('Export fehlgeschlagen (' + (e&&e.code||'Fehler') + ').');
+  }
+};
+
+/* ---------------- wishlist ---------------- */
+function openWishlistModal(){
+  openModal('Wunschliste');
+  function body(){
+    if(!wishlist.length) return '<div class="empty">Noch nichts auf der Wunschliste.</div>';
+    return wishlist.map(w =>
+      '<div class="wl-item" data-id="'+w.id+'">' +
+        '<div><div class="wname">'+escapeHtml(w.artist)+'</div><div class="wtitle">'+escapeHtml(w.title)+'</div>' +
+        (w.note?'<div class="wnote">'+escapeHtml(w.note)+'</div>':'') + '</div>' +
+        '<div class="wl-actions"><button class="mini" data-wact="tocol">→ Sammlung</button><button class="mini danger" data-wact="wdel">✕</button></div>' +
+      '</div>'
+    ).join('');
+  }
+  dialogBody.innerHTML =
+    '<div class="field-row">' +
+      '<div class="field"><label>Interpret</label><input id="w_artist" type="text"></div>' +
+      '<div class="field"><label>Album</label><input id="w_title" type="text"></div>' +
+    '</div>' +
+    '<div class="field"><label>Notiz</label><input id="w_note" type="text" placeholder="z.B. Re-Release, Vinyl-Only bisher …"></div>' +
+    '<div class="dbtn primary" id="w_addBtn" style="display:inline-block; margin-bottom:12px;">+ Zur Wunschliste</div>' +
+    '<div id="wl_list">' + body() + '</div>';
+
+  dialogActions.innerHTML = '<button class="dbtn" id="wCloseBtn">Schließen</button>';
+  document.getElementById('wCloseBtn').onclick = closeModal;
+
+  document.getElementById('w_addBtn').onclick = async () => {
+    const artist = document.getElementById('w_artist').value.trim();
+    const title = document.getElementById('w_title').value.trim();
+    const note = document.getElementById('w_note').value.trim();
+    if(!artist || !title){ formmsg.textContent = 'Interpret und Titel angeben.'; formmsg.className='formmsg err'; return; }
+    try {
+      const db = await claude.use('db');
+      if(!db) throw 0;
+      await db.collection('wishlist').add({artist, title, note, addedAt: new Date().toISOString()});
+      document.getElementById('w_artist').value='';
+      document.getElementById('w_title').value='';
+      document.getElementById('w_note').value='';
+      formmsg.textContent = ''; formmsg.className = 'formmsg';
+      setTimeout(()=>{ document.getElementById('wl_list').innerHTML = body(); }, 300);
+    } catch(e){ formmsg.textContent = 'Bist du online?'; formmsg.className='formmsg err'; }
+  };
+
+  dialogBody.querySelector('#wl_list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-wact]');
+    if(!btn) return;
+    const item = e.target.closest('.wl-item');
+    const id = item.dataset.id;
+    const w = wishlist.find(x=>x.id===id);
+    if(!w) return;
+    if(btn.dataset.wact === 'wdel'){
+      try { const db = await claude.use('db'); await db.collection('wishlist').doc(id).delete(); item.remove(); } catch(e){}
+    } else if(btn.dataset.wact === 'tocol'){
+      try { const db = await claude.use('db'); await db.collection('wishlist').doc(id).delete(); } catch(e){}
+      closeModal();
+      openAddEditModal({artist:w.artist, title:w.title, year:null, genre:'', isMix:false, rating:0, note:'', cds:[[]]});
+    }
+  });
+}
+document.getElementById('m_wishlist').onclick = openWishlistModal;
+
+/* ---------------- sticker ---------------- */
+function stickerHtml(a){
+  return '<div class="sticker-wrap">' +
+    '<div class="shead"><div><div class="sartist">'+escapeHtml(a.artist)+(a.rating>=4?' ★':'')+'</div><div class="stitle">'+escapeHtml(a.title)+'</div></div>' +
+    '<div class="smeta">'+[a.year,a.genre].filter(Boolean).map(escapeHtml).join(' · ')+'</div></div>' +
+    '<div class="stracks">' +
+    a.cds.map((cd,ci)=>{
+      const label = a.cds.length>1 ? ('CD '+(ci+1)) : 'Titelliste';
+      return '<div class="sdisc"><h5>'+label+'</h5>' + (cd||[]).map((t,i)=>(i+1)+'. '+escapeHtml(t)).join('<br>') + '</div>';
+    }).join('') +
+    '</div></div>';
+}
+/** Standalone, self-contained HTML for one sticker — no external fonts, no app chrome —
+ * so it prints cleanly no matter where it's opened (Files-App-Vorschau, Safari, Mail-Anhang, ...). */
+function stickerStandaloneHtml(a){
+  const title = escapeHtml(a.artist) + ' - ' + escapeHtml(a.title);
+  return '<!doctype html><html><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<title>'+title+'</title><style>' +
+    'body{margin:14px; font-family: ui-monospace, Menlo, "SF Mono", Consolas, monospace; color:#16150f;}' +
+    '.sticker-wrap{border:2px solid #16150f; padding:10px 12px; max-width:520px;}' +
+    '.shead{display:flex; justify-content:space-between; gap:10px; border-bottom:2px solid #16150f; padding-bottom:6px; margin-bottom:6px;}' +
+    '.sartist{font-weight:700; font-size:16px;} .stitle{font-size:13px; color:#55524a; font-style:italic;}' +
+    '.smeta{font-size:11px; color:#55524a; text-align:right; white-space:nowrap;}' +
+    '.stracks{columns:2; column-gap:14px; font-size:12.5px; line-height:1.55;}' +
+    '.sdisc{break-inside:avoid; margin-bottom:10px;} .sdisc h5{font-size:10.5px; text-transform:uppercase; color:#55524a; margin:0 0 4px 0;}' +
+    '.printhint{margin-top:16px; font-size:11px; color:#77736a;}' +
+    '@media print{ .printhint{display:none;} body{margin:0;} }' +
+    '</style></head><body>' +
+    stickerHtml(a) +
+    '<div class="printhint">Zum Drucken: Teilen-Symbol → Drucken (oder Strg/Cmd+P).</div>' +
+    '</body></html>';
+}
+async function exportStickerFile(a){
+  try {
+    const downloads = await claude.use('downloads');
+    if(!downloads){ toast('Dafür brauchst du kurz Internet.', true); return; }
+    const safeName = (a.artist+'-'+a.title).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'sticker';
+    await downloads.save({filename: 'sticker-'+safeName+'.html', data: stickerStandaloneHtml(a)});
+    toast('Datei gespeichert — öffne sie und drucke von dort über Teilen → Drucken.');
+  } catch(e) {
+    if(e && e.code !== 'declined') toast('Konnte die Datei nicht speichern (' + (e&&e.code||'Fehler') + ').', true);
+  }
+}
+function openStickerModal(a){
+  openModal('Sticker – Vorschau');
+  dialogBody.innerHTML = stickerHtml(a) +
+    '<div class="sticker-hint">"Drucken" versucht den Druckdialog direkt zu öffnen — klappt nur in einem echten Browser (z.B. Safari), nicht in der Claude-App-Ansicht. Öffnest du die App über das Home-Bildschirm-Symbol, nutze stattdessen "Als Datei speichern": die Datei kannst du danach in der Dateien-App öffnen und von dort ganz normal über Teilen → Drucken ausdrucken.</div>';
+  dialogActions.innerHTML = '<button class="dbtn" id="stCloseBtn">Schließen</button><button class="dbtn" id="stExportBtn">Als Datei speichern</button><button class="dbtn primary" id="stPrintBtn">Drucken</button>';
+  document.getElementById('stCloseBtn').onclick = closeModal;
+  document.getElementById('stExportBtn').onclick = () => exportStickerFile(a);
+  document.getElementById('stPrintBtn').onclick = () => {
+    try { window.print(); } catch(e){ /* may be blocked here — the hint text and the export button cover that case */ }
+  };
+}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(err => console.warn('SW register failed', err));
+  });
+}
+</script>
+</body>
+</html>
